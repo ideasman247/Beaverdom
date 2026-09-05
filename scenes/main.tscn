@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://bvrphase0main"]
 
-[ext_resource type="Script" path="res://scripts/dummy_board.gd" id="1_board"]
+[ext_resource type="Script" uid="uid://cu04jxi21p1ot" path="res://scripts/puzzle/puzzle_board.gd" id="1_board"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -29,13 +29,14 @@ offset_left = 48.0
 offset_top = 72.0
 offset_right = -48.0
 offset_bottom = 220.0
+grow_horizontal = 2
 theme_override_colors/font_color = Color(0.92, 0.93, 0.88, 1)
 theme_override_font_sizes/font_size = 40
-mouse_filter = 2
+text = "Beaverdom"
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 3
-text = "Beaverdom"
+mouse_filter = 2
 
 [node name="Hint" type="Label" parent="."]
 layout_mode = 1
@@ -51,12 +52,13 @@ grow_horizontal = 2
 grow_vertical = 0
 theme_override_colors/font_color = Color(0.7, 0.78, 0.72, 1)
 theme_override_font_sizes/font_size = 28
-mouse_filter = 2
+text = "Phase 1 · line of 3 · cascades"
 horizontal_alignment = 1
 autowrap_mode = 3
-text = "Phase 0 · dummy grid · neighbors only"
+mouse_filter = 2
 
 [node name="GridHost" type="Control" parent="."]
+clip_contents = true
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
