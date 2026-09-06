@@ -63,7 +63,7 @@ func _ready() -> void:
 	resized.connect(_relayout_existing)
 	_overlay_action.pressed.connect(_on_overlay_action)
 	await get_tree().process_frame
-	_start_level(0)
+	_start_level(GameState.puzzle_index)
 
 
 func _start_level(index: int) -> void:
@@ -168,10 +168,11 @@ func _check_outcome() -> void:
 	if _goal_met():
 		_won = true
 		_resolved = true
+		var payout := GameState.payout_for(_moves_left)
 		if _level_index >= _levels.size() - 1:
-			_show_overlay("Lesson complete", "Play again")
+			_show_overlay("Lesson complete · +%d sticks" % payout, "Home")
 		else:
-			_show_overlay("Pond looks better", "Next")
+			_show_overlay("Pond looks better · +%d sticks" % payout, "Home")
 		return
 	if _moves_left <= 0:
 		_resolved = true
@@ -185,10 +186,13 @@ func _show_overlay(banner: String, action: String) -> void:
 
 
 func _on_overlay_action() -> void:
-	if _won and _level_index >= _levels.size() - 1:
-		_start_level(0)
-	elif _won:
-		_start_level(_level_index + 1)
+	if _won:
+		GameState.award_win(_moves_left)
+		if _level_index >= _levels.size() - 1:
+			GameState.puzzle_index = 0
+		else:
+			GameState.puzzle_index = _level_index + 1
+		get_tree().change_scene_to_file("res://scenes/valley.tscn")
 	else:
 		_start_level(_level_index)
 
