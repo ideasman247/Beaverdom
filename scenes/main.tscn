@@ -36,7 +36,6 @@ text = "Beaverdom"
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 3
-mouse_filter = 2
 
 [node name="Hint" type="Label" parent="."]
 layout_mode = 1
@@ -52,10 +51,9 @@ grow_horizontal = 2
 grow_vertical = 0
 theme_override_colors/font_color = Color(0.7, 0.78, 0.72, 1)
 theme_override_font_sizes/font_size = 28
-text = "Phase 1 · line of 3 · cascades"
+text = "Phase 2 · boosters · tap or swap"
 horizontal_alignment = 1
 autowrap_mode = 3
-mouse_filter = 2
 
 [node name="GridHost" type="Control" parent="."]
 clip_contents = true
