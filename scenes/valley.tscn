@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://bvrvalleyhub"]
+[gd_scene load_steps=14 format=3 uid="uid://bvrvalleyhub"]
 
 [ext_resource type="Script" path="res://scripts/valley/valley_map.gd" id="1_valley"]
 [ext_resource type="Texture2D" path="res://assets/art/valley_bg.png" id="2_bg"]
@@ -7,6 +7,11 @@
 [ext_resource type="Texture2D" path="res://assets/art/reeds.png" id="5_reeds"]
 [ext_resource type="Texture2D" path="res://assets/art/otter.png" id="6_otter"]
 [ext_resource type="Texture2D" path="res://assets/art/frog.png" id="7_frog"]
+[ext_resource type="Texture2D" path="res://assets/art/boot.png" id="8_boot"]
+[ext_resource type="Texture2D" path="res://assets/art/weeds.png" id="9_weeds"]
+[ext_resource type="Texture2D" path="res://assets/art/can.png" id="10_can"]
+[ext_resource type="Texture2D" path="res://assets/art/log.png" id="11_log"]
+[ext_resource type="Texture2D" path="res://assets/art/drip.png" id="12_drip"]
 
 [sub_resource type="StyleBoxEmpty" id="empty"]
 
@@ -132,51 +137,135 @@ mouse_filter = 2
 
 [node name="Boot" type="Button" parent="Mess"]
 layout_mode = 0
-offset_left = 380.0
-offset_top = 1320.0
-offset_right = 530.0
-offset_bottom = 1390.0
-text = "Old boot"
+offset_left = 360.0
+offset_top = 1280.0
+offset_right = 540.0
+offset_bottom = 1450.0
+theme_override_colors/font_color = Color(0.12, 0.16, 0.12, 1)
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("empty")
+theme_override_styles/pressed = SubResource("empty")
+theme_override_styles/hover = SubResource("empty")
+theme_override_styles/hover_pressed = SubResource("empty")
+theme_override_styles/disabled = SubResource("empty")
+theme_override_styles/focus = SubResource("empty")
+text = "Boot"
+icon = ExtResource("8_boot")
+flat = true
+alignment = 1
+icon_alignment = 1
+vertical_icon_alignment = 0
+expand_icon = true
 
 [node name="Weeds" type="Button" parent="Mess"]
 layout_mode = 0
-offset_left = 560.0
-offset_top = 1400.0
-offset_right = 730.0
-offset_bottom = 1470.0
+offset_left = 540.0
+offset_top = 1360.0
+offset_right = 740.0
+offset_bottom = 1530.0
+theme_override_colors/font_color = Color(0.12, 0.16, 0.12, 1)
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("empty")
+theme_override_styles/pressed = SubResource("empty")
+theme_override_styles/hover = SubResource("empty")
+theme_override_styles/hover_pressed = SubResource("empty")
+theme_override_styles/disabled = SubResource("empty")
+theme_override_styles/focus = SubResource("empty")
 text = "Weeds"
+icon = ExtResource("9_weeds")
+flat = true
+alignment = 1
+icon_alignment = 1
+vertical_icon_alignment = 0
+expand_icon = true
 
 [node name="Can" type="Button" parent="Mess"]
 layout_mode = 0
-offset_left = 760.0
-offset_top = 1330.0
-offset_right = 920.0
-offset_bottom = 1400.0
-text = "Tin can"
+offset_left = 740.0
+offset_top = 1280.0
+offset_right = 940.0
+offset_bottom = 1450.0
+theme_override_colors/font_color = Color(0.12, 0.16, 0.12, 1)
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("empty")
+theme_override_styles/pressed = SubResource("empty")
+theme_override_styles/hover = SubResource("empty")
+theme_override_styles/hover_pressed = SubResource("empty")
+theme_override_styles/disabled = SubResource("empty")
+theme_override_styles/focus = SubResource("empty")
+text = "Can"
+icon = ExtResource("10_can")
+flat = true
+alignment = 1
+icon_alignment = 1
+vertical_icon_alignment = 0
+expand_icon = true
 
 [node name="FallenLog" type="Button" parent="."]
 layout_mode = 0
-offset_left = 340.0
-offset_top = 980.0
-offset_right = 560.0
-offset_bottom = 1060.0
+offset_left = 300.0
+offset_top = 900.0
+offset_right = 580.0
+offset_bottom = 1080.0
+theme_override_colors/font_color = Color(0.12, 0.16, 0.12, 1)
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("empty")
+theme_override_styles/pressed = SubResource("empty")
+theme_override_styles/hover = SubResource("empty")
+theme_override_styles/hover_pressed = SubResource("empty")
+theme_override_styles/disabled = SubResource("empty")
+theme_override_styles/focus = SubResource("empty")
 text = "Fallen log"
+icon = ExtResource("11_log")
+flat = true
+alignment = 1
+icon_alignment = 1
+vertical_icon_alignment = 0
+expand_icon = true
 
 [node name="SeepA" type="Button" parent="."]
 layout_mode = 0
-offset_left = 400.0
-offset_top = 1248.0
+offset_left = 380.0
+offset_top = 1220.0
 offset_right = 560.0
-offset_bottom = 1318.0
+offset_bottom = 1380.0
+theme_override_colors/font_color = Color(0.12, 0.16, 0.12, 1)
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("empty")
+theme_override_styles/pressed = SubResource("empty")
+theme_override_styles/hover = SubResource("empty")
+theme_override_styles/hover_pressed = SubResource("empty")
+theme_override_styles/disabled = SubResource("empty")
+theme_override_styles/focus = SubResource("empty")
 text = "Drip"
+icon = ExtResource("12_drip")
+flat = true
+alignment = 1
+icon_alignment = 1
+vertical_icon_alignment = 0
+expand_icon = true
 
 [node name="SeepB" type="Button" parent="."]
 layout_mode = 0
-offset_left = 600.0
-offset_top = 1236.0
+offset_left = 580.0
+offset_top = 1208.0
 offset_right = 760.0
-offset_bottom = 1306.0
+offset_bottom = 1368.0
+theme_override_colors/font_color = Color(0.12, 0.16, 0.12, 1)
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("empty")
+theme_override_styles/pressed = SubResource("empty")
+theme_override_styles/hover = SubResource("empty")
+theme_override_styles/hover_pressed = SubResource("empty")
+theme_override_styles/disabled = SubResource("empty")
+theme_override_styles/focus = SubResource("empty")
 text = "Drip"
+icon = ExtResource("12_drip")
+flat = true
+alignment = 1
+icon_alignment = 1
+vertical_icon_alignment = 0
+expand_icon = true
 
 [node name="Otter" type="Button" parent="."]
 visible = false

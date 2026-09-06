@@ -49,8 +49,24 @@ func _ready() -> void:
 	resized.connect(_relayout_existing)
 	_overlay_action.pressed.connect(_on_overlay_action)
 	$Home.pressed.connect(_go_lodge)
+	_style_wood_button($Home)
+	_style_wood_button(_overlay_action)
 	await get_tree().process_frame
 	_start_level(GameState.puzzle_index)
+
+
+func _style_wood_button(btn: Button) -> void:
+	var box := StyleBoxFlat.new()
+	box.bg_color = Color(0.36, 0.26, 0.16, 0.94)
+	box.set_corner_radius_all(22)
+	box.set_border_width_all(3)
+	box.border_color = Color(0.58, 0.44, 0.28)
+	var pressed := box.duplicate() as StyleBoxFlat
+	pressed.bg_color = Color(0.28, 0.2, 0.12, 0.96)
+	for key in ["normal", "hover", "focus"]:
+		btn.add_theme_stylebox_override(key, box)
+	btn.add_theme_stylebox_override("pressed", pressed)
+	btn.add_theme_color_override("font_color", Color(0.97, 0.93, 0.84))
 
 
 func _notification(what: int) -> void:

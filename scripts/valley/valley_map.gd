@@ -32,8 +32,36 @@ func _ready() -> void:
 	for item in [$Mess/Boot, $Mess/Weeds, $Mess/Can]:
 		item.pressed.connect(_on_tidy.bind(item))
 	await get_tree().process_frame
+	_style_wood_button(_chops)
+	_style_wood_button(_upgrade)
+	_style_wood_button(_play)
 	GameState.collect_idle()
 	_refresh()
+
+
+func _style_wood_button(btn: Button) -> void:
+	var box := StyleBoxFlat.new()
+	box.bg_color = Color(0.36, 0.26, 0.16, 0.94)
+	box.set_corner_radius_all(22)
+	box.set_border_width_all(3)
+	box.border_color = Color(0.58, 0.44, 0.28)
+	box.content_margin_left = 18
+	box.content_margin_right = 18
+	box.content_margin_top = 10
+	box.content_margin_bottom = 10
+	var pressed := box.duplicate() as StyleBoxFlat
+	pressed.bg_color = Color(0.28, 0.2, 0.12, 0.96)
+	var disabled := box.duplicate() as StyleBoxFlat
+	disabled.bg_color = Color(0.36, 0.28, 0.2, 0.55)
+	disabled.border_color = Color(0.5, 0.42, 0.32, 0.5)
+	for key in ["normal", "hover", "focus", "hover_pressed"]:
+		btn.add_theme_stylebox_override(key, box)
+	btn.add_theme_stylebox_override("pressed", pressed)
+	btn.add_theme_stylebox_override("disabled", disabled)
+	btn.add_theme_color_override("font_color", Color(0.97, 0.93, 0.84))
+	btn.add_theme_color_override("font_hover_color", Color(1.0, 0.97, 0.9))
+	btn.add_theme_color_override("font_pressed_color", Color(0.9, 0.82, 0.7))
+	btn.add_theme_color_override("font_disabled_color", Color(0.86, 0.8, 0.72, 0.75))
 
 
 func _notification(what: int) -> void:
