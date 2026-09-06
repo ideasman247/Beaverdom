@@ -31,6 +31,7 @@ func _ready() -> void:
 	for item in [$Mess/Boot, $Mess/Weeds, $Mess/Can]:
 		item.pressed.connect(_on_tidy.bind(item))
 	await get_tree().process_frame
+	GameState.collect_idle()
 	_refresh()
 
 
@@ -45,6 +46,7 @@ func _say(line: String) -> void:
 
 func _on_upgrade() -> void:
 	if GameState.raise_dam():
+		Sfx.tap()
 		_say("The dam holds. Water climbs.")
 		var fact := GameState.first_hear(
 			"dam",
@@ -61,6 +63,7 @@ func _on_upgrade() -> void:
 
 func _on_chops() -> void:
 	if GameState.raise_chops():
+		Sfx.tap()
 		var fact := GameState.first_hear(
 			"chops",
 			"Those orange teeth are iron-hard, and they never stop growing."
@@ -77,6 +80,7 @@ func _on_log() -> void:
 	if GameState.log_cleared:
 		return
 	if GameState.chop_log():
+		Sfx.tap()
 		_say("The log is kindling now. +2 sticks.")
 		_refresh()
 		return
@@ -91,6 +95,7 @@ func _on_seep(item: Button) -> void:
 	if GameState.is_seep_patched(item.name):
 		return
 	if GameState.patch_seep(item.name):
+		Sfx.tap()
 		_say("Quiet. Mud and sticks over the leak.")
 		if not fact.is_empty():
 			_say(fact)
@@ -112,6 +117,7 @@ func _on_otter() -> void:
 	)
 	var gift := GameState.claim_otter()
 	if gift > 0:
+		Sfx.tap()
 		_say("The otter left a gift. +%d sticks." % gift)
 		if not intro.is_empty():
 			_say(intro)
@@ -136,6 +142,7 @@ func _on_frog() -> void:
 
 func _on_tidy(item: Button) -> void:
 	GameState.tidy(item.name)
+	Sfx.tap()
 	item.visible = false
 	var intro := GameState.first_hear("tidy", "Clean banks, safer shallows.")
 	_say(intro if not intro.is_empty() else "Bank looks better. +1 stick.")
@@ -144,7 +151,10 @@ func _on_tidy(item: Button) -> void:
 
 func _refresh() -> void:
 	_stars.text = "Sticks %d · Chops %d" % [GameState.stars, GameState.chops]
-	if GameState.last_payout > 0:
+	if GameState.last_idle > 0:
+		_note.text = "While you were away, the dam gathered %d sticks." % GameState.last_idle
+		GameState.last_idle = 0
+	elif GameState.last_payout > 0:
 		_note.text = "The puzzle brought %d sticks." % GameState.last_payout
 		GameState.last_payout = 0
 	elif _note.text.is_empty():

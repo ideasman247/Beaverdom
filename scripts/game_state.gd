@@ -8,18 +8,95 @@ const MAX_CHOPS := 3
 const LOG_CHOPS_NEED := 2
 const SEEP_COST := 7
 const OTTER_GIFT := 3
-
+const SAVE_PATH := "user://beaverdom.cfg"
+const IDLE_SECS_PER_STICK := 480
+const PRACTICE_INDEX := 20
 
 var stars := 0
 var dam_stage := 0
 var chops := 1
 var puzzle_index := 0
 var last_payout := 0
+var last_idle := 0
+var last_seen := 0.0
 var tidied: Dictionary = {}
 var seeps_patched: Dictionary = {}
 var log_cleared := false
 var otter_claimed_day := -1
 var heard: Dictionary = {}
+
+
+func _ready() -> void:
+	load_game()
+	tree_exiting.connect(save_game)
+
+
+func save_game() -> void:
+	last_seen = Time.get_unix_time_from_system()
+	var cfg := ConfigFile.new()
+	cfg.set_value("g", "stars", stars)
+	cfg.set_value("g", "dam_stage", dam_stage)
+	cfg.set_value("g", "chops", chops)
+	cfg.set_value("g", "puzzle_index", puzzle_index)
+	cfg.set_value("g", "log_cleared", log_cleared)
+	cfg.set_value("g", "otter_claimed_day", otter_claimed_day)
+	cfg.set_value("g", "last_seen", last_seen)
+	cfg.set_value("g", "tidied", PackedStringArray(tidied.keys()))
+	cfg.set_value("g", "seeps", PackedStringArray(seeps_patched.keys()))
+	cfg.set_value("g", "heard", PackedStringArray(heard.keys()))
+	cfg.save(SAVE_PATH)
+
+
+func load_game() -> void:
+	var cfg := ConfigFile.new()
+	if cfg.load(SAVE_PATH) != OK:
+		last_seen = Time.get_unix_time_from_system()
+		return
+	stars = int(cfg.get_value("g", "stars", 0))
+	dam_stage = int(cfg.get_value("g", "dam_stage", 0))
+	chops = int(cfg.get_value("g", "chops", 1))
+	puzzle_index = int(cfg.get_value("g", "puzzle_index", 0))
+	log_cleared = bool(cfg.get_value("g", "log_cleared", false))
+	otter_claimed_day = int(cfg.get_value("g", "otter_claimed_day", -1))
+	last_seen = float(cfg.get_value("g", "last_seen", Time.get_unix_time_from_system()))
+	tidied.clear()
+	for key in cfg.get_value("g", "tidied", PackedStringArray()):
+		tidied[str(key)] = true
+	seeps_patched.clear()
+	for key in cfg.get_value("g", "seeps", PackedStringArray()):
+		seeps_patched[str(key)] = true
+	heard.clear()
+	for key in cfg.get_value("g", "heard", PackedStringArray()):
+		heard[str(key)] = true
+
+
+func idle_cap() -> int:
+	return 12 + dam_stage * 4 + patched_seep_count() * 2
+
+
+func collect_idle() -> int:
+	var now := Time.get_unix_time_from_system()
+	if last_seen <= 1.0:
+		last_seen = now
+		last_idle = 0
+		save_game()
+		return 0
+	var elapsed := now - last_seen
+	var gain := mini(int(elapsed / float(IDLE_SECS_PER_STICK)), idle_cap())
+	last_seen = now
+	last_idle = gain
+	if gain > 0:
+		stars += gain
+	save_game()
+	return gain
+
+
+func advance_after_win(level_index: int, level_count: int) -> void:
+	if level_index >= level_count - 1:
+		puzzle_index = mini(PRACTICE_INDEX, level_count - 1)
+	else:
+		puzzle_index = level_index + 1
+	save_game()
 
 
 func payout_for(moves_left: int) -> int:
@@ -30,6 +107,7 @@ func award_win(moves_left: int) -> int:
 	var gain := payout_for(moves_left)
 	stars += gain
 	last_payout = gain
+	save_game()
 	return gain
 
 
@@ -48,6 +126,7 @@ func raise_dam() -> bool:
 		return false
 	stars -= dam_cost()
 	dam_stage += 1
+	save_game()
 	return true
 
 
@@ -66,6 +145,7 @@ func raise_chops() -> bool:
 		return false
 	stars -= chops_cost()
 	chops += 1
+	save_game()
 	return true
 
 
@@ -78,6 +158,7 @@ func tidy(id: String) -> void:
 		return
 	tidied[id] = true
 	stars += 1
+	save_game()
 
 
 func can_chop_log() -> bool:
@@ -89,6 +170,7 @@ func chop_log() -> bool:
 		return false
 	log_cleared = true
 	stars += 2
+	save_game()
 	return true
 
 
@@ -109,6 +191,7 @@ func patch_seep(id: String) -> bool:
 		return false
 	stars -= SEEP_COST
 	seeps_patched[id] = true
+	save_game()
 	return true
 
 
@@ -133,6 +216,7 @@ func claim_otter() -> int:
 		return 0
 	otter_claimed_day = _today()
 	stars += OTTER_GIFT
+	save_game()
 	return OTTER_GIFT
 
 
@@ -140,4 +224,5 @@ func first_hear(id: String, line: String) -> String:
 	if heard.has(id):
 		return ""
 	heard[id] = true
+	save_game()
 	return line

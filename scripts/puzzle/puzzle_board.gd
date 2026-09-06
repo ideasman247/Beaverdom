@@ -1,5 +1,5 @@
 extends Control
-## Phase 3: twenty teaching levels, kind retry, oil stains.
+## Forty levels, save/load, idle sticks, placeholder sounds.
 
 const COLS := 8
 const ROWS := 8
@@ -170,13 +170,15 @@ func _check_outcome() -> void:
 		_resolved = true
 		var payout := GameState.payout_for(_moves_left)
 		if _level_index >= _levels.size() - 1:
-			_show_overlay("Lesson complete · +%d sticks" % payout, "Home")
+			_show_overlay("The creek is clear · +%d sticks" % payout, "Home")
 		else:
 			_show_overlay("Pond looks better · +%d sticks" % payout, "Home")
+		Sfx.win()
 		return
 	if _moves_left <= 0:
 		_resolved = true
 		_show_overlay("Out of moves", "Try again")
+		Sfx.fail()
 
 
 func _show_overlay(banner: String, action: String) -> void:
@@ -188,10 +190,7 @@ func _show_overlay(banner: String, action: String) -> void:
 func _on_overlay_action() -> void:
 	if _won:
 		GameState.award_win(_moves_left)
-		if _level_index >= _levels.size() - 1:
-			GameState.puzzle_index = 0
-		else:
-			GameState.puzzle_index = _level_index + 1
+		GameState.advance_after_win(_level_index, _levels.size())
 		get_tree().change_scene_to_file("res://scenes/valley.tscn")
 	else:
 		_start_level(_level_index)
@@ -451,6 +450,7 @@ func _apply_match_plan(focus: Vector2i) -> void:
 		to_pop.append(cell)
 	if not names.is_empty():
 		_status.text = ", ".join(names)
+		Sfx.boost()
 	else:
 		_status.text = "Match"
 	await _pop_cells(to_pop)
@@ -511,6 +511,7 @@ func _pop_cells(cells: Array[Vector2i]) -> void:
 		tween.tween_property(tile, "scale", Vector2(0.15, 0.15), CLEAR_SEC)
 		tween.tween_property(tile, "modulate:a", 0.0, CLEAR_SEC)
 	if any_tween:
+		Sfx.pop()
 		await tween.finished
 	for cell in cells:
 		if BoardModel.is_gem(_board.get_cell(cell)):
