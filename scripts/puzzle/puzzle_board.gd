@@ -62,8 +62,22 @@ func _ready() -> void:
 	_levels = LevelCatalog.all_levels()
 	resized.connect(_relayout_existing)
 	_overlay_action.pressed.connect(_on_overlay_action)
+	$Home.pressed.connect(_go_lodge)
 	await get_tree().process_frame
 	_start_level(GameState.puzzle_index)
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
+		_go_lodge()
+
+
+func _go_lodge() -> void:
+	if _won and _overlay.visible:
+		_on_overlay_action()
+		return
+	GameState.save_game()
+	get_tree().change_scene_to_file("res://scenes/valley.tscn")
 
 
 func _start_level(index: int) -> void:
