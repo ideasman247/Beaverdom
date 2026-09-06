@@ -13,6 +13,7 @@ var cols: int
 var rows: int
 var type_count: int
 var cells: Array[int] = []
+var oil: Array[int] = []
 
 
 func _init(p_cols: int = 8, p_rows: int = 8, p_type_count: int = 5) -> void:
@@ -21,6 +22,8 @@ func _init(p_cols: int = 8, p_rows: int = 8, p_type_count: int = 5) -> void:
 	type_count = p_type_count
 	cells.resize(cols * rows)
 	cells.fill(EMPTY)
+	oil.resize(cols * rows)
+	oil.fill(0)
 
 
 static func is_gem(tile_type: int) -> bool:
@@ -82,6 +85,48 @@ func get_cell(cell: Vector2i) -> int:
 func set_cell(cell: Vector2i, tile_type: int) -> void:
 	if in_bounds(cell):
 		cells[index_of(cell)] = tile_type
+
+
+func get_oil(cell: Vector2i) -> int:
+	if not in_bounds(cell):
+		return 0
+	return oil[index_of(cell)]
+
+
+func set_oil(cell: Vector2i, layers: int) -> void:
+	if in_bounds(cell):
+		oil[index_of(cell)] = maxi(0, layers)
+
+
+func oil_remaining() -> int:
+	var total := 0
+	for layers in oil:
+		total += layers
+	return total
+
+
+func clear_all_oil() -> void:
+	oil.fill(0)
+
+
+func scatter_oil(stains: int) -> void:
+	clear_all_oil()
+	if stains <= 0:
+		return
+	var spots: Array[Vector2i] = []
+	for y in rows:
+		for x in cols:
+			spots.append(Vector2i(x, y))
+	spots.shuffle()
+	for i in mini(stains, spots.size()):
+		set_oil(spots[i], 1)
+
+
+func damage_oil(cell: Vector2i) -> bool:
+	if get_oil(cell) <= 0:
+		return false
+	set_oil(cell, get_oil(cell) - 1)
+	return true
 
 
 func swap(a: Vector2i, b: Vector2i) -> void:

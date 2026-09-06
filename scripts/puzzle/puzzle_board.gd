@@ -1,5 +1,5 @@
 extends Control
-## Phase 2: cascade plus Canal / Lodge blast / Dragonfly / Flood bloom.
+## Phase 3: twenty teaching levels, kind retry, oil stains.
 
 const COLS := 8
 const ROWS := 8
@@ -12,6 +12,7 @@ const BoardModel := preload("res://scripts/puzzle/board_model.gd")
 const MatchFinder := preload("res://scripts/puzzle/match_finder.gd")
 const MatchPlan := preload("res://scripts/puzzle/match_plan.gd")
 const BoosterResolver := preload("res://scripts/puzzle/booster_resolver.gd")
+const LevelCatalog := preload("res://scripts/puzzle/level_catalog.gd")
 const PALETTE: Array[Color] = [
 	Color("4A7C59"),
 	Color("2E86AB"),
@@ -27,9 +28,26 @@ var _press_cell := Vector2i(-1, -1)
 var _consumed := false
 var _busy := false
 var _booster_fill: Dictionary = {}
+var _levels: Array[Dictionary] = []
+var _level_index := 0
+var _moves_left := 0
+var _gems_cleared := 0
+var _oil_cleared := 0
+var _made: Dictionary = {}
+var _resolved := false
+var _won := false
+var _oil_views: Dictionary = {}
 
 @onready var _status: Label = $Status
+@onready var _hint: Label = $Hint
+@onready var _hud_level: Label = $Hud/Level
+@onready var _hud_moves: Label = $Hud/Moves
+@onready var _hud_goal: Label = $Hud/Goal
 @onready var _grid_host: Control = $GridHost
+@onready var _oil_layer: Control = $OilLayer
+@onready var _overlay: ColorRect = $Overlay
+@onready var _overlay_banner: Label = $Overlay/Banner
+@onready var _overlay_action: Button = $Overlay/Action
 
 
 func _ready() -> void:
@@ -41,11 +59,138 @@ func _ready() -> void:
 		BoardModel.FLOOD: Color("C85BD6"),
 	}
 	randomize()
-	_board.fill_without_matches()
+	_levels = LevelCatalog.all_levels()
 	resized.connect(_relayout_existing)
-	_status.text = "4 / L-T / 2x2 / 5 make boosters · tap to fire"
+	_overlay_action.pressed.connect(_on_overlay_action)
 	await get_tree().process_frame
+	_start_level(0)
+
+
+func _start_level(index: int) -> void:
+	_level_index = clampi(index, 0, _levels.size() - 1)
+	var spec: Dictionary = _levels[_level_index]
+	_moves_left = int(spec[&"moves"])
+	_gems_cleared = 0
+	_oil_cleared = 0
+	_made = {
+		BoardModel.CANAL_H: 0,
+		BoardModel.CANAL_V: 0,
+		BoardModel.BLAST: 0,
+		BoardModel.DRAGONFLY: 0,
+		BoardModel.FLOOD: 0,
+	}
+	_resolved = false
+	_won = false
+	_busy = false
+	_overlay.visible = false
+	_board.fill_without_matches()
+	_board.scatter_oil(int(spec[&"oil"]))
+	_hint.text = str(spec[&"teach"])
+	_status.text = "Level %d" % int(spec[&"id"])
 	_spawn_all_tiles()
+	_rebuild_oil_views()
+	_refresh_hud()
+
+
+func _current_level() -> Dictionary:
+	return _levels[_level_index]
+
+
+func _refresh_hud() -> void:
+	var spec := _current_level()
+	_hud_level.text = "Lv %d / %d" % [int(spec[&"id"]), _levels.size()]
+	_hud_moves.text = "Moves %d" % _moves_left
+	_hud_goal.text = _goal_label()
+
+
+func _goal_label() -> String:
+	var spec := _current_level()
+	var goal: StringName = spec[&"goal"]
+	var need := int(spec[&"count"])
+	match goal:
+		&"gems":
+			return "Clear %d / %d" % [_gems_cleared, need]
+		&"canal":
+			return "Canal %d / %d" % [_canal_made(), need]
+		&"dragonfly":
+			return "Dragonfly %d / %d" % [int(_made[BoardModel.DRAGONFLY]), need]
+		&"blast":
+			return "Blast %d / %d" % [int(_made[BoardModel.BLAST]), need]
+		&"flood":
+			return "Flood %d / %d" % [int(_made[BoardModel.FLOOD]), need]
+		&"oil":
+			return "Oil %d left" % _board.oil_remaining()
+		_:
+			return ""
+
+
+func _canal_made() -> int:
+	return int(_made[BoardModel.CANAL_H]) + int(_made[BoardModel.CANAL_V])
+
+
+func _goal_met() -> bool:
+	var spec := _current_level()
+	var need := int(spec[&"count"])
+	match spec[&"goal"]:
+		&"gems":
+			return _gems_cleared >= need
+		&"canal":
+			return _canal_made() >= need
+		&"dragonfly":
+			return int(_made[BoardModel.DRAGONFLY]) >= need
+		&"blast":
+			return int(_made[BoardModel.BLAST]) >= need
+		&"flood":
+			return int(_made[BoardModel.FLOOD]) >= need
+		&"oil":
+			return _board.oil_remaining() <= 0
+		_:
+			return false
+
+
+func _note_booster(booster: int) -> void:
+	if _made.has(booster):
+		_made[booster] = int(_made[booster]) + 1
+	elif BoardModel.is_canal(booster):
+		_made[booster] = 1
+
+
+func _spend_move() -> void:
+	if _resolved:
+		return
+	_moves_left = maxi(0, _moves_left - 1)
+	_refresh_hud()
+
+
+func _check_outcome() -> void:
+	if _resolved:
+		return
+	if _goal_met():
+		_won = true
+		_resolved = true
+		if _level_index >= _levels.size() - 1:
+			_show_overlay("Lesson complete", "Play again")
+		else:
+			_show_overlay("Pond looks better", "Next")
+		return
+	if _moves_left <= 0:
+		_resolved = true
+		_show_overlay("Out of moves", "Try again")
+
+
+func _show_overlay(banner: String, action: String) -> void:
+	_overlay_banner.text = banner
+	_overlay_action.text = action
+	_overlay.visible = true
+
+
+func _on_overlay_action() -> void:
+	if _won and _level_index >= _levels.size() - 1:
+		_start_level(0)
+	elif _won:
+		_start_level(_level_index + 1)
+	else:
+		_start_level(_level_index)
 
 
 func _relayout_existing() -> void:
@@ -58,6 +203,7 @@ func _relayout_existing() -> void:
 		tile.size = Vector2(_cell_px, _cell_px)
 		tile.pivot_offset = tile.size * 0.5
 		_paint_tile(tile, _board.get_cell(cell))
+	_rebuild_oil_views()
 
 
 func _measure_cell() -> void:
@@ -72,8 +218,9 @@ func _measure_cell() -> void:
 
 
 func _spawn_all_tiles() -> void:
-	for child in _grid_host.get_children():
-		child.queue_free()
+	for tile in _tiles.values():
+		if tile is ColorRect:
+			(tile as ColorRect).queue_free()
 	_tiles.clear()
 	_measure_cell()
 	if _cell_px <= 0.0:
@@ -82,6 +229,27 @@ func _spawn_all_tiles() -> void:
 		for x in COLS:
 			var cell := Vector2i(x, y)
 			_tiles[cell] = _make_tile(_board.get_cell(cell), cell)
+
+
+func _rebuild_oil_views() -> void:
+	for child in _oil_layer.get_children():
+		child.queue_free()
+	_oil_views.clear()
+	_measure_cell()
+	if _cell_px <= 0.0:
+		return
+	for y in ROWS:
+		for x in COLS:
+			var cell := Vector2i(x, y)
+			if _board.get_oil(cell) <= 0:
+				continue
+			var blot := ColorRect.new()
+			blot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			blot.color = Color(0.07, 0.06, 0.04, 0.62)
+			blot.position = _cell_pos(cell)
+			blot.size = Vector2(_cell_px, _cell_px)
+			_oil_layer.add_child(blot)
+			_oil_views[cell] = blot
 
 
 func _make_tile(tile_type: int, visual_cell: Vector2i) -> ColorRect:
@@ -123,7 +291,7 @@ func _cell_pos(cell: Vector2i) -> Vector2:
 
 
 func _gui_input(event: InputEvent) -> void:
-	if _busy:
+	if _busy or _resolved:
 		return
 	if event is InputEventScreenTouch:
 		var touch := event as InputEventScreenTouch
@@ -208,6 +376,7 @@ func _resolve_swap(a: Vector2i, b: Vector2i) -> void:
 	_board.swap(a, b)
 	await _tween_swap_visuals(a, b)
 	if BoardModel.is_booster(type_a) and BoardModel.is_booster(type_b):
+		_spend_move()
 		_status.text = "Combo"
 		var clears: Array[Vector2i] = BoosterResolver.clears_from_combo(_board, a, b, b)
 		await _pop_cells(clears)
@@ -215,6 +384,7 @@ func _resolve_swap(a: Vector2i, b: Vector2i) -> void:
 		_busy = false
 		return
 	if BoardModel.is_booster(type_a) or BoardModel.is_booster(type_b):
+		_spend_move()
 		var booster_now := b if BoardModel.is_booster(type_a) else a
 		var other_was: int = type_b if BoardModel.is_booster(type_a) else type_a
 		var flood_color := other_was if BoardModel.is_gem(other_was) else -1
@@ -232,6 +402,7 @@ func _resolve_swap(a: Vector2i, b: Vector2i) -> void:
 		_status.text = "No match"
 		_busy = false
 		return
+	_spend_move()
 	await _apply_match_plan(b)
 	await _settle_and_cascade()
 	_busy = false
@@ -239,6 +410,7 @@ func _resolve_swap(a: Vector2i, b: Vector2i) -> void:
 
 func _activate_booster(cell: Vector2i) -> void:
 	_busy = true
+	_spend_move()
 	_status.text = BoardModel.booster_name(_board.get_cell(cell))
 	var clears: Array[Vector2i] = BoosterResolver.clears_from_booster(_board, cell)
 	await _pop_cells(clears)
@@ -266,6 +438,7 @@ func _apply_match_plan(focus: Vector2i) -> void:
 	for spawn in spawns:
 		var cell: Vector2i = spawn[&"cell"]
 		spawn_at[cell] = spawn[&"booster"]
+		_note_booster(spawn[&"booster"])
 		names.append(BoardModel.booster_name(spawn[&"booster"]))
 	var to_pop: Array[Vector2i] = []
 	for cell in clear:
@@ -280,6 +453,8 @@ func _apply_match_plan(focus: Vector2i) -> void:
 	for spawn in spawns:
 		var cell: Vector2i = spawn[&"cell"]
 		var booster: int = spawn[&"booster"]
+		if BoardModel.is_gem(_board.get_cell(cell)):
+			_gems_cleared += 1
 		_board.set_cell(cell, booster)
 		var tile: ColorRect = _tiles.get(cell)
 		if tile:
@@ -302,12 +477,14 @@ func _run_cascade() -> int:
 func _settle_and_cascade() -> void:
 	await _gravity_and_fill()
 	var chain := await _run_cascade()
-	if chain > 1:
+	if chain > 1 and not _resolved:
 		_status.text = "Avalanche x%d" % chain
-	if not MatchFinder.has_valid_move(_board):
+	if not _resolved and not MatchFinder.has_valid_move(_board):
 		_board.fill_without_matches()
 		_spawn_all_tiles()
 		_status.text = "No moves · shuffled"
+	_refresh_hud()
+	_check_outcome()
 
 
 func _gravity_and_fill() -> void:
@@ -332,11 +509,20 @@ func _pop_cells(cells: Array[Vector2i]) -> void:
 	if any_tween:
 		await tween.finished
 	for cell in cells:
+		if BoardModel.is_gem(_board.get_cell(cell)):
+			_gems_cleared += 1
+		if _board.damage_oil(cell):
+			_oil_cleared += 1
+			var blot: ColorRect = _oil_views.get(cell)
+			if blot and _board.get_oil(cell) <= 0:
+				blot.queue_free()
+				_oil_views.erase(cell)
 		_board.set_cell(cell, BoardModel.EMPTY)
 		var tile: ColorRect = _tiles.get(cell)
 		if tile:
 			tile.queue_free()
 		_tiles.erase(cell)
+	_refresh_hud()
 
 
 func _animate_collapse(moves: Array[Dictionary]) -> void:

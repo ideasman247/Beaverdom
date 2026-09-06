@@ -21,14 +21,49 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.102, 0.176, 0.176, 1)
 
+[node name="Hud" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 40.0
+offset_top = 36.0
+offset_right = -40.0
+offset_bottom = 100.0
+grow_horizontal = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="Level" type="Label" parent="Hud"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.92, 0.93, 0.88, 1)
+theme_override_font_sizes/font_size = 28
+text = "Lv 1 / 20"
+
+[node name="Moves" type="Label" parent="Hud"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.92, 0.93, 0.88, 1)
+theme_override_font_sizes/font_size = 28
+text = "Moves 22"
+horizontal_alignment = 1
+
+[node name="Goal" type="Label" parent="Hud"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.92, 0.93, 0.88, 1)
+theme_override_font_sizes/font_size = 28
+text = "Clear 0 / 10"
+horizontal_alignment = 2
+
 [node name="Status" type="Label" parent="."]
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
 offset_left = 48.0
-offset_top = 72.0
+offset_top = 108.0
 offset_right = -48.0
-offset_bottom = 220.0
+offset_bottom = 200.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(0.92, 0.93, 0.88, 1)
 theme_override_font_sizes/font_size = 40
@@ -51,7 +86,7 @@ grow_horizontal = 2
 grow_vertical = 0
 theme_override_colors/font_color = Color(0.7, 0.78, 0.72, 1)
 theme_override_font_sizes/font_size = 28
-text = "Phase 2 · boosters · tap or swap"
+text = "Match three of the same color."
 horizontal_alignment = 1
 autowrap_mode = 3
 
@@ -70,3 +105,66 @@ offset_bottom = 420.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+
+[node name="OilLayer" type="Control" parent="."]
+z_index = 1
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -420.0
+offset_top = -420.0
+offset_right = 420.0
+offset_bottom = 420.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Overlay" type="ColorRect" parent="."]
+visible = false
+z_index = 8
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.05, 0.08, 0.08, 0.72)
+
+[node name="Banner" type="Label" parent="Overlay"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -400.0
+offset_top = -180.0
+offset_right = 400.0
+offset_bottom = -40.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.92, 0.93, 0.88, 1)
+theme_override_font_sizes/font_size = 48
+text = "Pond looks better"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="Action" type="Button" parent="Overlay"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -180.0
+offset_top = 20.0
+offset_right = 180.0
+offset_bottom = 110.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 32
+text = "Next"
