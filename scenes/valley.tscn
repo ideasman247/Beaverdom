@@ -1,6 +1,14 @@
-[gd_scene load_steps=2 format=3 uid="uid://bvrvalleyhub"]
+[gd_scene load_steps=9 format=3 uid="uid://bvrvalleyhub"]
 
 [ext_resource type="Script" path="res://scripts/valley/valley_map.gd" id="1_valley"]
+[ext_resource type="Texture2D" path="res://assets/art/valley_bg.png" id="2_bg"]
+[ext_resource type="Texture2D" path="res://assets/art/lodge.png" id="3_lodge"]
+[ext_resource type="Texture2D" path="res://assets/art/dam.png" id="4_dam"]
+[ext_resource type="Texture2D" path="res://assets/art/reeds.png" id="5_reeds"]
+[ext_resource type="Texture2D" path="res://assets/art/otter.png" id="6_otter"]
+[ext_resource type="Texture2D" path="res://assets/art/frog.png" id="7_frog"]
+
+[sub_resource type="StyleBoxEmpty" id="empty"]
 
 [node name="Valley" type="Control"]
 layout_mode = 3
@@ -11,15 +19,20 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_valley")
 
-[node name="Sky" type="ColorRect" parent="."]
+[node name="Sky" type="TextureRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
-color = Color(0.45, 0.62, 0.72, 1)
+texture = ExtResource("2_bg")
+expand_mode = 1
+stretch_mode = 6
 
 [node name="FarBank" type="ColorRect" parent="."]
+visible = false
 layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0
@@ -39,9 +52,10 @@ anchor_bottom = 1.0
 offset_top = -220.0
 offset_bottom = -140.0
 mouse_filter = 2
-color = Color(0.18, 0.45, 0.55, 0.92)
+color = Color(0.18, 0.45, 0.55, 0.42)
 
 [node name="NearBank" type="ColorRect" parent="."]
+visible = false
 layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0
@@ -51,53 +65,63 @@ offset_top = -160.0
 mouse_filter = 2
 color = Color(0.22, 0.28, 0.16, 1)
 
-[node name="Dam" type="ColorRect" parent="."]
+[node name="Dam" type="TextureRect" parent="."]
 layout_mode = 0
-offset_left = 430.0
-offset_top = 1180.0
-offset_right = 650.0
-offset_bottom = 1250.0
-mouse_filter = 2
-color = Color(0.42, 0.28, 0.16, 1)
-
-[node name="Lodge" type="ColorRect" parent="."]
-layout_mode = 0
-offset_left = 120.0
-offset_top = 1080.0
-offset_right = 340.0
+offset_left = 360.0
+offset_top = 1120.0
+offset_right = 720.0
 offset_bottom = 1280.0
 mouse_filter = 2
-color = Color(0.38, 0.24, 0.14, 1)
+texture = ExtResource("4_dam")
+expand_mode = 1
+stretch_mode = 5
 
-[node name="Plant1" type="ColorRect" parent="."]
+[node name="Lodge" type="TextureRect" parent="."]
+layout_mode = 0
+offset_left = 40.0
+offset_top = 980.0
+offset_right = 360.0
+offset_bottom = 1300.0
+mouse_filter = 2
+texture = ExtResource("3_lodge")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Plant1" type="TextureRect" parent="."]
 visible = false
 layout_mode = 0
-offset_left = 720.0
-offset_top = 1120.0
-offset_right = 790.0
+offset_left = 700.0
+offset_top = 1040.0
+offset_right = 820.0
 offset_bottom = 1260.0
 mouse_filter = 2
-color = Color(0.22, 0.48, 0.28, 1)
+texture = ExtResource("5_reeds")
+expand_mode = 1
+stretch_mode = 5
 
-[node name="Plant2" type="ColorRect" parent="."]
+[node name="Plant2" type="TextureRect" parent="."]
 visible = false
 layout_mode = 0
-offset_left = 810.0
-offset_top = 1140.0
-offset_right = 870.0
+offset_left = 800.0
+offset_top = 1060.0
+offset_right = 910.0
 offset_bottom = 1260.0
 mouse_filter = 2
-color = Color(0.3, 0.52, 0.26, 1)
+texture = ExtResource("5_reeds")
+expand_mode = 1
+stretch_mode = 5
 
-[node name="Plant3" type="ColorRect" parent="."]
+[node name="Plant3" type="TextureRect" parent="."]
 visible = false
 layout_mode = 0
 offset_left = 880.0
-offset_top = 1100.0
-offset_right = 950.0
+offset_top = 1000.0
+offset_right = 1020.0
 offset_bottom = 1260.0
 mouse_filter = 2
-color = Color(0.18, 0.4, 0.24, 1)
+texture = ExtResource("5_reeds")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="Mess" type="Control" parent="."]
 layout_mode = 1
@@ -157,20 +181,48 @@ text = "Drip"
 [node name="Otter" type="Button" parent="."]
 visible = false
 layout_mode = 0
-offset_left = 120.0
-offset_top = 980.0
-offset_right = 320.0
-offset_bottom = 1055.0
+offset_left = 40.0
+offset_top = 820.0
+offset_right = 280.0
+offset_bottom = 1060.0
+theme_override_colors/font_color = Color(0.12, 0.16, 0.12, 1)
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("empty")
+theme_override_styles/pressed = SubResource("empty")
+theme_override_styles/hover = SubResource("empty")
+theme_override_styles/hover_pressed = SubResource("empty")
+theme_override_styles/disabled = SubResource("empty")
+theme_override_styles/focus = SubResource("empty")
 text = "Otter gift"
+icon = ExtResource("6_otter")
+flat = true
+alignment = 1
+icon_alignment = 1
+vertical_icon_alignment = 0
+expand_icon = true
 
 [node name="Frog" type="Button" parent="."]
 visible = false
 layout_mode = 0
-offset_left = 860.0
-offset_top = 1240.0
-offset_right = 1020.0
-offset_bottom = 1310.0
+offset_left = 800.0
+offset_top = 1140.0
+offset_right = 1040.0
+offset_bottom = 1360.0
+theme_override_colors/font_color = Color(0.12, 0.16, 0.12, 1)
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("empty")
+theme_override_styles/pressed = SubResource("empty")
+theme_override_styles/hover = SubResource("empty")
+theme_override_styles/hover_pressed = SubResource("empty")
+theme_override_styles/disabled = SubResource("empty")
+theme_override_styles/focus = SubResource("empty")
 text = "Frog"
+icon = ExtResource("7_frog")
+flat = true
+alignment = 1
+icon_alignment = 1
+vertical_icon_alignment = 0
+expand_icon = true
 
 [node name="Hud" type="HBoxContainer" parent="."]
 layout_mode = 1

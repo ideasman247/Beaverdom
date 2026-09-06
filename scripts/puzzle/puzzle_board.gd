@@ -1,5 +1,5 @@
 extends Control
-## Forty levels, save/load, idle sticks, placeholder sounds.
+## Forty levels with illustrated wetland tiles.
 
 const COLS := 8
 const ROWS := 8
@@ -13,13 +13,7 @@ const MatchFinder := preload("res://scripts/puzzle/match_finder.gd")
 const MatchPlan := preload("res://scripts/puzzle/match_plan.gd")
 const BoosterResolver := preload("res://scripts/puzzle/booster_resolver.gd")
 const LevelCatalog := preload("res://scripts/puzzle/level_catalog.gd")
-const PALETTE: Array[Color] = [
-	Color("4A7C59"),
-	Color("2E86AB"),
-	Color("C4A35A"),
-	Color("8B5E3C"),
-	Color("7A9E7E"),
-]
+const TileArt := preload("res://scripts/puzzle/tile_art.gd")
 
 var _board := BoardModel.new(COLS, ROWS, TYPE_COUNT)
 var _tiles: Dictionary = {}
@@ -27,7 +21,6 @@ var _cell_px := 0.0
 var _press_cell := Vector2i(-1, -1)
 var _consumed := false
 var _busy := false
-var _booster_fill: Dictionary = {}
 var _levels: Array[Dictionary] = []
 var _level_index := 0
 var _moves_left := 0
@@ -51,13 +44,6 @@ var _oil_views: Dictionary = {}
 
 
 func _ready() -> void:
-	_booster_fill = {
-		BoardModel.CANAL_H: Color("C5D6E8"),
-		BoardModel.CANAL_V: Color("C5D6E8"),
-		BoardModel.BLAST: Color("E07A3D"),
-		BoardModel.DRAGONFLY: Color("4EB8B5"),
-		BoardModel.FLOOD: Color("C85BD6"),
-	}
 	randomize()
 	_levels = LevelCatalog.all_levels()
 	resized.connect(_relayout_existing)
@@ -215,7 +201,7 @@ func _relayout_existing() -> void:
 	if _cell_px <= 0.0:
 		return
 	for cell: Vector2i in _tiles:
-		var tile: ColorRect = _tiles[cell]
+		var tile: TextureRect = _tiles[cell]
 		tile.position = _cell_pos(cell)
 		tile.size = Vector2(_cell_px, _cell_px)
 		tile.pivot_offset = tile.size * 0.5
@@ -236,8 +222,8 @@ func _measure_cell() -> void:
 
 func _spawn_all_tiles() -> void:
 	for tile in _tiles.values():
-		if tile is ColorRect:
-			(tile as ColorRect).queue_free()
+		if tile is TextureRect:
+			(tile as TextureRect).queue_free()
 	_tiles.clear()
 	_measure_cell()
 	if _cell_px <= 0.0:
@@ -269,9 +255,11 @@ func _rebuild_oil_views() -> void:
 			_oil_views[cell] = blot
 
 
-func _make_tile(tile_type: int, visual_cell: Vector2i) -> ColorRect:
-	var tile := ColorRect.new()
+func _make_tile(tile_type: int, visual_cell: Vector2i) -> TextureRect:
+	var tile := TextureRect.new()
 	tile.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tile.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	tile.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	tile.size = Vector2(_cell_px, _cell_px)
 	tile.pivot_offset = tile.size * 0.5
 	tile.position = _cell_pos(visual_cell)
@@ -280,26 +268,10 @@ func _make_tile(tile_type: int, visual_cell: Vector2i) -> ColorRect:
 	return tile
 
 
-func _paint_tile(tile: ColorRect, tile_type: int) -> void:
-	var mark := tile.get_node_or_null("Mark")
-	if mark:
-		mark.queue_free()
-	if BoardModel.is_booster(tile_type):
-		tile.color = _booster_fill[tile_type]
-		var label := Label.new()
-		label.name = "Mark"
-		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		label.add_theme_font_size_override("font_size", int(maxi(18, int(_cell_px * 0.42))))
-		label.add_theme_color_override("font_color", Color("1A2420"))
-		label.text = BoardModel.booster_glyph(tile_type)
-		tile.add_child(label)
-	elif BoardModel.is_gem(tile_type):
-		tile.color = PALETTE[tile_type]
-	else:
-		tile.color = Color.TRANSPARENT
+func _paint_tile(tile: TextureRect, tile_type: int) -> void:
+	tile.texture = TileArt.texture_for(tile_type)
+	tile.modulate = Color.WHITE
+	tile.rotation = PI * 0.5 if tile_type == BoardModel.CANAL_V else 0.0
 
 
 func _cell_pos(cell: Vector2i) -> Vector2:
@@ -436,8 +408,8 @@ func _activate_booster(cell: Vector2i) -> void:
 
 
 func _tween_swap_visuals(a: Vector2i, b: Vector2i) -> void:
-	var tile_a: ColorRect = _tiles[a]
-	var tile_b: ColorRect = _tiles[b]
+	var tile_a: TextureRect = _tiles[a]
+	var tile_b: TextureRect = _tiles[b]
 	_tiles[a] = tile_b
 	_tiles[b] = tile_a
 	var tween := create_tween().set_parallel(true)
@@ -474,7 +446,7 @@ func _apply_match_plan(focus: Vector2i) -> void:
 		if BoardModel.is_gem(_board.get_cell(cell)):
 			_gems_cleared += 1
 		_board.set_cell(cell, booster)
-		var tile: ColorRect = _tiles.get(cell)
+		var tile: TextureRect = _tiles.get(cell)
 		if tile:
 			tile.scale = Vector2.ONE
 			tile.modulate.a = 1.0
@@ -518,7 +490,7 @@ func _pop_cells(cells: Array[Vector2i]) -> void:
 	var tween := create_tween().set_parallel(true)
 	var any_tween := false
 	for cell in cells:
-		var tile: ColorRect = _tiles.get(cell)
+		var tile: TextureRect = _tiles.get(cell)
 		if tile == null:
 			continue
 		any_tween = true
@@ -537,7 +509,7 @@ func _pop_cells(cells: Array[Vector2i]) -> void:
 				blot.queue_free()
 				_oil_views.erase(cell)
 		_board.set_cell(cell, BoardModel.EMPTY)
-		var tile: ColorRect = _tiles.get(cell)
+		var tile: TextureRect = _tiles.get(cell)
 		if tile:
 			tile.queue_free()
 		_tiles.erase(cell)
@@ -551,7 +523,7 @@ func _animate_collapse(moves: Array[Dictionary]) -> void:
 	for move in moves:
 		var from: Vector2i = move[&"from"]
 		var to: Vector2i = move[&"to"]
-		var tile: ColorRect = _tiles.get(from)
+		var tile: TextureRect = _tiles.get(from)
 		if tile == null:
 			continue
 		_tiles.erase(from)

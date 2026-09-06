@@ -1,17 +1,17 @@
 extends Control
-## Lodge plus naturalist layer: chops, log, seeps, otter gift, frog comments.
+## Illustrated valley hub plus naturalist layer.
 
 @onready var _stars: Label = $Hud/Stars
 @onready var _note: Label = $Note
 @onready var _water: ColorRect = $Water
-@onready var _dam: ColorRect = $Dam
-@onready var _lodge: ColorRect = $Lodge
+@onready var _dam: TextureRect = $Dam
+@onready var _lodge: TextureRect = $Lodge
 @onready var _upgrade: Button = $Upgrade
 @onready var _chops: Button = $Chops
 @onready var _play: Button = $Play
-@onready var _plant1: ColorRect = $Plant1
-@onready var _plant2: ColorRect = $Plant2
-@onready var _plant3: ColorRect = $Plant3
+@onready var _plant1: TextureRect = $Plant1
+@onready var _plant2: TextureRect = $Plant2
+@onready var _plant3: TextureRect = $Plant3
 @onready var _log: Button = $FallenLog
 @onready var _seep_a: Button = $SeepA
 @onready var _seep_b: Button = $SeepB
@@ -181,8 +181,8 @@ func _refresh() -> void:
 	var stage := GameState.dam_stage
 	var hush := float(GameState.patched_seep_count()) * 36.0
 	_water.offset_top = -220.0 - float(stage) * 110.0 - hush
-	_dam.size = Vector2(220.0 + float(stage) * 70.0, 70.0 + float(stage) * 28.0)
-	_dam.position.x = (size.x - _dam.size.x) * 0.5 if size.x > 1.0 else 430.0
+	_dam.size = Vector2(280.0 + float(stage) * 90.0, 120.0 + float(stage) * 36.0)
+	_dam.position = Vector2((size.x - _dam.size.x) * 0.5 if size.x > 1.0 else 360.0, 1120.0 - float(stage) * 18.0)
 	_lodge.modulate = Color(1, 1, 1, 1).lerp(Color(1.08, 1.05, 0.9), float(stage) / 3.0)
 	var plants := [_plant1, _plant2, _plant3]
 	for i in plants.size():
