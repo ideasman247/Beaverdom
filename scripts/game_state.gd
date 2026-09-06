@@ -25,10 +25,22 @@ var log_cleared := false
 var otter_claimed_day := -1
 var heard: Dictionary = {}
 
+signal progress_changed
+
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	load_game()
 	tree_exiting.connect(save_game)
+
+
+func _notification(what: int) -> void:
+	match what:
+		NOTIFICATION_APPLICATION_PAUSED, NOTIFICATION_WM_CLOSE_REQUEST:
+			save_game()
+		NOTIFICATION_APPLICATION_RESUMED:
+			collect_idle()
+			progress_changed.emit()
 
 
 func save_game() -> void:
@@ -40,11 +52,13 @@ func save_game() -> void:
 	cfg.set_value("g", "puzzle_index", puzzle_index)
 	cfg.set_value("g", "log_cleared", log_cleared)
 	cfg.set_value("g", "otter_claimed_day", otter_claimed_day)
-	cfg.set_value("g", "last_seen", last_seen)
+	cfg.set_value("g", "last_seen", int(last_seen))
 	cfg.set_value("g", "tidied", PackedStringArray(tidied.keys()))
 	cfg.set_value("g", "seeps", PackedStringArray(seeps_patched.keys()))
 	cfg.set_value("g", "heard", PackedStringArray(heard.keys()))
-	cfg.save(SAVE_PATH)
+	var err := cfg.save(SAVE_PATH)
+	if err != OK:
+		push_warning("Save failed (%s) at %s" % [error_string(err), OS.get_user_data_dir()])
 
 
 func load_game() -> void:
@@ -84,8 +98,8 @@ func collect_idle() -> int:
 	var elapsed := now - last_seen
 	var gain := mini(int(elapsed / float(IDLE_SECS_PER_STICK)), idle_cap())
 	last_seen = now
-	last_idle = gain
 	if gain > 0:
+		last_idle = gain
 		stars += gain
 	save_game()
 	return gain

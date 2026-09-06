@@ -20,6 +20,7 @@ extends Control
 
 
 func _ready() -> void:
+	GameState.progress_changed.connect(_refresh)
 	_upgrade.pressed.connect(_on_upgrade)
 	_chops.pressed.connect(_on_chops)
 	_play.pressed.connect(_on_play)
