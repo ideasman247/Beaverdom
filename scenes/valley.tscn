@@ -130,6 +130,48 @@ offset_right = 920.0
 offset_bottom = 1400.0
 text = "Tin can"
 
+[node name="FallenLog" type="Button" parent="."]
+layout_mode = 0
+offset_left = 340.0
+offset_top = 980.0
+offset_right = 560.0
+offset_bottom = 1060.0
+text = "Fallen log"
+
+[node name="SeepA" type="Button" parent="."]
+layout_mode = 0
+offset_left = 400.0
+offset_top = 1248.0
+offset_right = 560.0
+offset_bottom = 1318.0
+text = "Drip"
+
+[node name="SeepB" type="Button" parent="."]
+layout_mode = 0
+offset_left = 600.0
+offset_top = 1236.0
+offset_right = 760.0
+offset_bottom = 1306.0
+text = "Drip"
+
+[node name="Otter" type="Button" parent="."]
+visible = false
+layout_mode = 0
+offset_left = 120.0
+offset_top = 980.0
+offset_right = 320.0
+offset_bottom = 1055.0
+text = "Otter gift"
+
+[node name="Frog" type="Button" parent="."]
+visible = false
+layout_mode = 0
+offset_left = 860.0
+offset_top = 1240.0
+offset_right = 1020.0
+offset_bottom = 1310.0
+text = "Frog"
+
 [node name="Hud" type="HBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 10
@@ -169,6 +211,19 @@ text = "Tidy the banks, raise the dam, then puzzle."
 horizontal_alignment = 1
 autowrap_mode = 3
 
+[node name="Chops" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 48.0
+offset_top = -400.0
+offset_right = -48.0
+offset_bottom = -310.0
+theme_override_font_sizes/font_size = 28
+text = "Rank Chops · 6 sticks"
+
 [node name="Upgrade" type="Button" parent="."]
 layout_mode = 1
 anchors_preset = 12
@@ -176,10 +231,10 @@ anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 48.0
-offset_top = -280.0
+offset_top = -290.0
 offset_right = -48.0
-offset_bottom = -180.0
-theme_override_font_sizes/font_size = 30
+offset_bottom = -200.0
+theme_override_font_sizes/font_size = 28
 text = "Raise dam · 8 sticks"
 
 [node name="Play" type="Button" parent="."]
@@ -189,7 +244,7 @@ anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 48.0
-offset_top = -160.0
+offset_top = -180.0
 offset_right = -48.0
 offset_bottom = -48.0
 theme_override_font_sizes/font_size = 34
