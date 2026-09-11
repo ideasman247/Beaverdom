@@ -6,7 +6,6 @@ const Art := preload("res://scripts/snood/snood_art.gd")
 const SHOT_SPEED := 2200.0
 const MATCH_MIN := 3
 const SHOTS_PER_DROP := 5
-const DAM_TOP := 1520.0
 const HUD_PAD := 32.0
 const HUD_H := 72.0
 const ICON_GAP := 20.0
@@ -41,8 +40,10 @@ var _flush_left := 1
 var _chomp_left := 1
 var _slap_left := 1
 var _mode := &"normal"
+var _falls_this_shot := 0
 
 @onready var _grid: Control = $GridHost
+@onready var _dam: TextureRect = $Dam
 @onready var _sludge: TextureRect = $Sludge
 @onready var _sludge_body: TextureRect = $SludgeBody
 @onready var _shot: TextureRect = $Shot
@@ -321,6 +322,7 @@ func _nearest_empty_beside(hit: Vector2i) -> Vector2i:
 func _land(cell: Vector2i) -> void:
 	_busy = true
 	_flying = false
+	_falls_this_shot = 0
 	var landed := _shot_type
 	if _mode == &"chomp":
 		var hit_type := Model.EMPTY
@@ -343,9 +345,13 @@ func _land(cell: Vector2i) -> void:
 	else:
 		await _resolve_match(cell, landed)
 	_shots_until_drop -= 1
+	_shots_until_drop += _falls_this_shot
+	_falls_this_shot = 0
 	if _shots_until_drop <= 0:
 		_shots_until_drop = SHOTS_PER_DROP
 		_drop_ceiling()
+	else:
+		_shots_until_drop = mini(_shots_until_drop, SHOTS_PER_DROP)
 	_rebuild_views()
 	_refresh_hud()
 	_check_outcome()
@@ -376,6 +382,7 @@ func _resolve_row(row: int) -> void:
 
 func _drop_severed() -> void:
 	var fall := _model.severed_cells()
+	_falls_this_shot += fall.size()
 	if fall.is_empty():
 		return
 	var payloads: Array[Dictionary] = []
@@ -530,10 +537,16 @@ func _lowest_bottom() -> float:
 	return _hex_pos(0, low).y + _cell
 
 
+func _danger_y() -> float:
+	# Lose when hanging icons reach the dam crest or the beaver launcher.
+	var dam_top := _dam.position.y if _dam.size.y > 1.0 else size.y - 300.0
+	return minf(_beaver_mouth().y, dam_top)
+
+
 func _check_outcome() -> void:
 	if _resolved:
 		return
-	if _lowest_bottom() >= DAM_TOP:
+	if _lowest_bottom() >= _danger_y():
 		_resolved = true
 		_show_overlay("The dam is breached", "Try again")
 		Sfx.fail()

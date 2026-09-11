@@ -378,6 +378,7 @@ horizontal_alignment = 1
 autowrap_mode = 3
 
 [node name="Chops" type="Button" parent="."]
+z_index = 30
 layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0
@@ -391,6 +392,7 @@ theme_override_font_sizes/font_size = 28
 text = "Rank Chops · 6 sticks"
 
 [node name="Upgrade" type="Button" parent="."]
+z_index = 30
 layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0
@@ -404,6 +406,7 @@ theme_override_font_sizes/font_size = 28
 text = "Raise dam · 8 sticks"
 
 [node name="PlayRow" type="HBoxContainer" parent="."]
+z_index = 30
 layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0

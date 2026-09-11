@@ -433,6 +433,8 @@ func _gui_input(event: InputEvent) -> void:
 func _begin(main_local: Vector2) -> void:
 	_consumed = false
 	_press_cell = _cell_at(main_local)
+	if _press_cell.x >= 0:
+		Sfx.tap()
 
 
 func _try_swipe(main_local: Vector2) -> void:

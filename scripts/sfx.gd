@@ -14,30 +14,41 @@ func _ready() -> void:
 
 func pop() -> void:
 	_tone(620.0, 0.045)
+	_buzz(28, 0.55)
 
 
 func boost() -> void:
 	_tone(510.0, 0.07)
+	_buzz(40, 0.65)
 
 
 func win() -> void:
 	_tone(880.0, 0.12)
+	_buzz(70, 0.5)
 
 
 func fail() -> void:
 	_tone(196.0, 0.11)
+	_buzz(55, 0.45)
 
 
 func tap() -> void:
 	_tone(440.0, 0.035)
+	_buzz(14, 0.32)
 
 
 func shoot() -> void:
 	_play(_bubble(0.09))
+	_buzz(24, 0.72)
 
 
 func bounce() -> void:
 	_tone(196.0, 0.05)
+	_buzz(10, 0.28)
+
+
+func _buzz(msec: int, amplitude: float) -> void:
+	Input.vibrate_handheld(msec, amplitude)
 
 
 func _tone(hz: float, seconds: float) -> void:

@@ -29,6 +29,7 @@ const BLOOM_SEC := 2.2
 
 func _ready() -> void:
 	GameState.progress_changed.connect(_refresh)
+	resized.connect(_on_resized)
 	_upgrade.pressed.connect(_on_upgrade)
 	_chops.pressed.connect(_on_chops)
 	_play.pressed.connect(_on_play)
@@ -112,10 +113,16 @@ func _on_dev_item(id: int) -> void:
 	_refresh()
 
 
+func _on_resized() -> void:
+	_refresh()
+
+
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
 		GameState.save_game()
 		get_tree().quit()
+	elif what == NOTIFICATION_WM_SIZE_CHANGED:
+		_refresh()
 
 
 func _on_play() -> void:
@@ -292,25 +299,24 @@ func _place_dam(stage: int) -> void:
 	_lodge.visible = built
 	if not built:
 		return
-	match stage:
-		1:
-			_dam.position = Vector2(290, 860)
-			_dam.size = Vector2(500, 300)
-			_lodge.position = Vector2(16, 1160)
-			_lodge.size = Vector2(280, 320)
-			_seep_a.position = Vector2(340, 920)
-			_seep_b.position = Vector2(560, 920)
-		2:
-			_dam.position = Vector2(170, 1180)
-			_dam.size = Vector2(740, 280)
-			_lodge.position = Vector2(8, 1240)
-			_lodge.size = Vector2(270, 280)
-			_seep_a.position = Vector2(280, 1220)
-			_seep_b.position = Vector2(620, 1220)
-		_:
-			_dam.position = Vector2(110, 1240)
-			_dam.size = Vector2(860, 260)
-			_lodge.position = Vector2(4, 1270)
-			_lodge.size = Vector2(270, 260)
-			_seep_a.position = Vector2(260, 1260)
-			_seep_b.position = Vector2(640, 1260)
+	var w := size.x if size.x > 1.0 else 1080.0
+	var h := size.y if size.y > 1.0 else 1920.0
+	# Sit on the near shore just above Rank Chops, not over the buttons.
+	var dam_w := minf(w - 40.0, 720.0 + float(stage - 1) * 80.0)
+	var dam_h := 260.0 + float(stage - 1) * 16.0
+	var chops_top := _chops.position.y if _chops.position.y > 1.0 else h - 400.0
+	var dam_bottom := chops_top - 12.0
+	_dam.size = Vector2(dam_w, dam_h)
+	_dam.position = Vector2((w - dam_w) * 0.5, dam_bottom - dam_h)
+	var lodge_w := 250.0
+	var lodge_h := 280.0
+	_lodge.size = Vector2(lodge_w, lodge_h)
+	_lodge.position = Vector2(6.0, dam_bottom - lodge_h + 24.0)
+	_seep_a.z_index = 8
+	_seep_b.z_index = 8
+	_seep_a.position = Vector2(_dam.position.x + dam_w * 0.18, _dam.position.y + dam_h * 0.22)
+	_seep_b.position = Vector2(_dam.position.x + dam_w * 0.58, _dam.position.y + dam_h * 0.22)
+	_otter.z_index = 9
+	_frog.z_index = 9
+	_otter.position = Vector2(16.0, _lodge.position.y - 36.0)
+	_frog.position = Vector2(w - 250.0, dam_bottom - 220.0)
