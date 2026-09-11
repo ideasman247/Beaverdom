@@ -39,7 +39,7 @@ static func clears_from_combo(board: RefCounted, a: Vector2i, b: Vector2i, dest:
 		return _resolve(board, [], seeds, -1)
 	if (ta == BoardModel.BLAST and tb == BoardModel.DRAGONFLY) or (tb == BoardModel.BLAST and ta == BoardModel.DRAGONFLY):
 		_add_disk(board, dest, 2, seeds)
-		_add_random_gems(board, seeds, 3)
+		_add_fly_targets(board, seeds, 3)
 		return _resolve(board, [], seeds, -1)
 	return _resolve(board, [a, b], {}, -1)
 
@@ -52,7 +52,7 @@ static func _paint_cross_or_color(board: RefCounted, ta: int, tb: int, dest: Vec
 	elif other == BoardModel.BLAST:
 		_add_disk(board, dest, 2, seeds)
 	elif other == BoardModel.DRAGONFLY:
-		_add_random_gems(board, seeds, 5)
+		_add_fly_targets(board, seeds, 5)
 
 
 static func _resolve(board: RefCounted, fire_list: Array, seeds: Dictionary, flood_color: int) -> Array[Vector2i]:
@@ -83,7 +83,7 @@ static func _resolve(board: RefCounted, fire_list: Array, seeds: Dictionary, flo
 				_add_disk(board, origin, 1, seeds)
 			BoardModel.DRAGONFLY:
 				_add_disk(board, origin, 1, seeds)
-				_add_random_gems(board, seeds, 1)
+				_add_fly_targets(board, seeds, 1)
 			BoardModel.FLOOD:
 				var color: int = flood_color if flood_color >= 0 else int(board.most_common_gem())
 				_add_color(board, color, seeds)
@@ -129,15 +129,25 @@ static func _add_color(board: RefCounted, color: int, seeds: Dictionary) -> void
 				seeds[cell] = true
 
 
-static func _add_random_gems(board: RefCounted, seeds: Dictionary, count: int) -> void:
-	var candidates: Array[Vector2i] = []
+static func _add_fly_targets(board: RefCounted, seeds: Dictionary, count: int) -> void:
+	var objectives: Array[Vector2i] = []
+	var gems: Array[Vector2i] = []
 	for y in board.rows:
 		for x in board.cols:
 			var cell := Vector2i(x, y)
 			if seeds.has(cell):
 				continue
-			if BoardModel.is_gem(board.get_cell(cell)):
-				candidates.append(cell)
-	candidates.shuffle()
-	for i in mini(count, candidates.size()):
-		seeds[candidates[i]] = true
+			if board.get_oil(cell) > 0:
+				objectives.append(cell)
+			elif BoardModel.is_gem(board.get_cell(cell)):
+				gems.append(cell)
+	objectives.shuffle()
+	var placed := 0
+	for i in mini(count, objectives.size()):
+		seeds[objectives[i]] = true
+		placed += 1
+	if placed >= count:
+		return
+	gems.shuffle()
+	for i in mini(count - placed, gems.size()):
+		seeds[gems[i]] = true

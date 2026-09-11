@@ -8,12 +8,24 @@ const GAP := 8.0
 const CLEAR_SEC := 0.16
 const FALL_SEC := 0.2
 const SWAP_SEC := 0.12
+const HUD_PAD := 40.0
+const HUD_TOP := 36.0
+const HUD_BOTTOM := 100.0
+const STATUS_TOP := 108.0
+const STATUS_BOTTOM := 200.0
+const HINT_TOP := -160.0
+const HINT_BOTTOM := -64.0
+const HOME_TOP := -72.0
+const HOME_BOTTOM := -16.0
+const MIN_INSET_TOP := 56.0
+const MIN_INSET_BOTTOM := 40.0
 const BoardModel := preload("res://scripts/puzzle/board_model.gd")
 const MatchFinder := preload("res://scripts/puzzle/match_finder.gd")
 const MatchPlan := preload("res://scripts/puzzle/match_plan.gd")
 const BoosterResolver := preload("res://scripts/puzzle/booster_resolver.gd")
 const LevelCatalog := preload("res://scripts/puzzle/level_catalog.gd")
 const TileArt := preload("res://scripts/puzzle/tile_art.gd")
+const OIL_FRAME := preload("res://assets/art/oil_frame.png")
 
 var _board := BoardModel.new(COLS, ROWS, TYPE_COUNT)
 var _tiles: Dictionary = {}
@@ -31,6 +43,8 @@ var _resolved := false
 var _won := false
 var _oil_views: Dictionary = {}
 
+@onready var _hud: HBoxContainer = $Hud
+@onready var _home: Button = $Home
 @onready var _status: Label = $Status
 @onready var _hint: Label = $Hint
 @onready var _hud_level: Label = $Hud/Level
@@ -48,10 +62,11 @@ func _ready() -> void:
 	_levels = LevelCatalog.all_levels()
 	resized.connect(_relayout_existing)
 	_overlay_action.pressed.connect(_on_overlay_action)
-	$Home.pressed.connect(_go_lodge)
-	_style_wood_button($Home)
+	_home.pressed.connect(_go_lodge)
+	_style_wood_button(_home)
 	_style_wood_button(_overlay_action)
 	await get_tree().process_frame
+	_apply_safe_layout()
 	_start_level(GameState.puzzle_index)
 
 
@@ -72,6 +87,39 @@ func _style_wood_button(btn: Button) -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
 		_go_lodge()
+	elif what == NOTIFICATION_WM_SIZE_CHANGED:
+		_apply_safe_layout()
+
+
+func _screen_insets() -> Vector2:
+	var vis := get_viewport().get_visible_rect().size
+	var win := Vector2(DisplayServer.window_get_size())
+	if vis.y <= 1.0:
+		vis = Vector2(1080.0, 1920.0)
+	var top := 0.0
+	var bottom := 0.0
+	var safe := DisplayServer.get_display_safe_area()
+	if win.y > 1.0 and safe.size.y > 0:
+		var sy := vis.y / win.y
+		top = maxf(float(safe.position.y) * sy, 0.0)
+		bottom = maxf(float(win.y - safe.end.y) * sy, 0.0)
+	return Vector2(maxf(top, MIN_INSET_TOP), maxf(bottom, MIN_INSET_BOTTOM))
+
+
+func _apply_safe_layout() -> void:
+	if _hud == null:
+		return
+	var inset := _screen_insets()
+	_hud.offset_left = HUD_PAD
+	_hud.offset_right = -HUD_PAD
+	_hud.offset_top = HUD_TOP + inset.x
+	_hud.offset_bottom = HUD_BOTTOM + inset.x
+	_status.offset_top = STATUS_TOP + inset.x
+	_status.offset_bottom = STATUS_BOTTOM + inset.x
+	_hint.offset_top = HINT_TOP - inset.y
+	_hint.offset_bottom = HINT_BOTTOM - inset.y
+	_home.offset_top = HOME_TOP - inset.y
+	_home.offset_bottom = HOME_BOTTOM - inset.y
 
 
 func _go_lodge() -> void:
@@ -213,6 +261,7 @@ func _on_overlay_action() -> void:
 
 
 func _relayout_existing() -> void:
+	_apply_safe_layout()
 	_measure_cell()
 	if _cell_px <= 0.0:
 		return
@@ -262,9 +311,11 @@ func _rebuild_oil_views() -> void:
 			var cell := Vector2i(x, y)
 			if _board.get_oil(cell) <= 0:
 				continue
-			var blot := ColorRect.new()
+			var blot := TextureRect.new()
 			blot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			blot.color = Color(0.07, 0.06, 0.04, 0.62)
+			blot.texture = OIL_FRAME
+			blot.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			blot.stretch_mode = TextureRect.STRETCH_SCALE
 			blot.position = _cell_pos(cell)
 			blot.size = Vector2(_cell_px, _cell_px)
 			_oil_layer.add_child(blot)
@@ -275,7 +326,7 @@ func _make_tile(tile_type: int, visual_cell: Vector2i) -> TextureRect:
 	var tile := TextureRect.new()
 	tile.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	tile.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	tile.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	tile.stretch_mode = TextureRect.STRETCH_SCALE
 	tile.size = Vector2(_cell_px, _cell_px)
 	tile.pivot_offset = tile.size * 0.5
 	tile.position = _cell_pos(visual_cell)
@@ -455,6 +506,8 @@ func _apply_match_plan(focus: Vector2i) -> void:
 		Sfx.boost()
 	else:
 		_status.text = "Match"
+	for cell: Vector2i in spawn_at:
+		_hit_oil(cell)
 	await _pop_cells(to_pop)
 	for spawn in spawns:
 		var cell: Vector2i = spawn[&"cell"]
@@ -518,18 +571,25 @@ func _pop_cells(cells: Array[Vector2i]) -> void:
 	for cell in cells:
 		if BoardModel.is_gem(_board.get_cell(cell)):
 			_gems_cleared += 1
-		if _board.damage_oil(cell):
-			_oil_cleared += 1
-			var blot: ColorRect = _oil_views.get(cell)
-			if blot and _board.get_oil(cell) <= 0:
-				blot.queue_free()
-				_oil_views.erase(cell)
+		_hit_oil(cell)
 		_board.set_cell(cell, BoardModel.EMPTY)
 		var tile: TextureRect = _tiles.get(cell)
 		if tile:
 			tile.queue_free()
 		_tiles.erase(cell)
 	_refresh_hud()
+
+
+func _hit_oil(cell: Vector2i) -> void:
+	if not _board.damage_oil(cell):
+		return
+	_oil_cleared += 1
+	if _board.get_oil(cell) > 0:
+		return
+	var blot: TextureRect = _oil_views.get(cell)
+	if blot:
+		blot.queue_free()
+		_oil_views.erase(cell)
 
 
 func _animate_collapse(moves: Array[Dictionary]) -> void:

@@ -13,7 +13,7 @@ static func all_levels() -> Array[Dictionary]:
 		_lv(7, 30, &"canal", 2, 0, "Make two Canals. Swap them for a cross."),
 		_lv(8, 24, &"gems", 18, 0, "Warm-up. Four still makes a Canal if you want it."),
 		_lv(9, 28, &"dragonfly", 1, 0, "Match a 2x2 square for a Dragonfly. Tap it."),
-		_lv(10, 26, &"dragonfly", 1, 0, "It pops neighbors, then one more gem elsewhere."),
+		_lv(10, 26, &"dragonfly", 1, 0, "It pops neighbors, then flies to a stain if one is left."),
 		_lv(11, 30, &"dragonfly", 2, 0, "Two Dragonflies. Squares, not lines."),
 		_lv(12, 32, &"blast", 1, 0, "An L or T of five makes a Lodge blast."),
 		_lv(13, 28, &"blast", 1, 0, "Three in a row plus three in a column, sharing a corner."),
