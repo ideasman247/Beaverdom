@@ -43,5 +43,6 @@ static func texture_for(tile_type: int) -> Texture2D:
 	tex.atlas = SHEET
 	tex.filter_clip = true
 	var cell := float(SHEET.get_width()) / float(GRID)
-	tex.region = Rect2(col * cell, row * cell, cell, cell)
+	var inset := 6.0
+	tex.region = Rect2(col * cell + inset, row * cell + inset, cell - inset * 2.0, cell - inset * 2.0)
 	return tex

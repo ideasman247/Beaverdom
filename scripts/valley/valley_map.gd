@@ -1,17 +1,25 @@
 extends Control
 ## Illustrated valley hub plus naturalist layer.
 
+const VALLEY_STAGES: Array[Texture2D] = [
+	preload("res://assets/art/valley_stage0.png"),
+	preload("res://assets/art/valley_stage1.png"),
+	preload("res://assets/art/valley_stage2.png"),
+	preload("res://assets/art/valley_stage3.png"),
+]
+const BLOOM_SEC := 2.2
+
+@onready var _sky: TextureRect = $Sky
 @onready var _stars: Label = $Hud/Stars
 @onready var _note: Label = $Note
-@onready var _water: ColorRect = $Water
+@onready var _bloom: ColorRect = $Bloom
+@onready var _dev: MenuButton = $Hud/Title
 @onready var _dam: TextureRect = $Dam
 @onready var _lodge: TextureRect = $Lodge
 @onready var _upgrade: Button = $Upgrade
 @onready var _chops: Button = $Chops
-@onready var _play: Button = $Play
-@onready var _plant1: TextureRect = $Plant1
-@onready var _plant2: TextureRect = $Plant2
-@onready var _plant3: TextureRect = $Plant3
+@onready var _play: Button = $PlayRow/Play
+@onready var _play_other: Button = $PlayRow/PlayOther
 @onready var _log: Button = $FallenLog
 @onready var _seep_a: Button = $SeepA
 @onready var _seep_b: Button = $SeepB
@@ -24,6 +32,7 @@ func _ready() -> void:
 	_upgrade.pressed.connect(_on_upgrade)
 	_chops.pressed.connect(_on_chops)
 	_play.pressed.connect(_on_play)
+	_play_other.pressed.connect(_on_play_other)
 	_log.pressed.connect(_on_log)
 	_seep_a.pressed.connect(_on_seep.bind(_seep_a))
 	_seep_b.pressed.connect(_on_seep.bind(_seep_b))
@@ -35,6 +44,9 @@ func _ready() -> void:
 	_style_wood_button(_chops)
 	_style_wood_button(_upgrade)
 	_style_wood_button(_play)
+	_style_wood_button(_play_other)
+	_style_wood_button(_dev)
+	_setup_dev_menu()
 	GameState.collect_idle()
 	_refresh()
 
@@ -64,6 +76,42 @@ func _style_wood_button(btn: Button) -> void:
 	btn.add_theme_color_override("font_disabled_color", Color(0.86, 0.8, 0.72, 0.75))
 
 
+func _setup_dev_menu() -> void:
+	var pop := _dev.get_popup()
+	pop.clear()
+	pop.add_item("Reset sticks", 0)
+	pop.add_item("Reset chops", 1)
+	pop.add_item("Reset dam", 2)
+	pop.add_item("Reset puzzles", 3)
+	pop.add_separator()
+	pop.add_item("Reset all four", 4)
+	pop.add_theme_font_size_override("font_size", 32)
+	pop.id_pressed.connect(_on_dev_item)
+
+
+func _on_dev_item(id: int) -> void:
+	match id:
+		0:
+			GameState.debug_reset_sticks()
+			_say("Sticks reset to 0.")
+		1:
+			GameState.debug_reset_chops()
+			_say("Chops reset to rank 1.")
+		2:
+			GameState.debug_reset_dam()
+			_say("Dam reset to dry creek.")
+		3:
+			GameState.debug_reset_puzzles()
+			_say("Puzzles reset to level 1.")
+		4:
+			GameState.debug_reset_sticks()
+			GameState.debug_reset_chops()
+			GameState.debug_reset_dam()
+			GameState.debug_reset_puzzles()
+			_say("Sticks, chops, dam, and puzzles reset.")
+	_refresh()
+
+
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
 		GameState.save_game()
@@ -72,6 +120,10 @@ func _notification(what: int) -> void:
 
 func _on_play() -> void:
 	get_tree().change_scene_to_file("res://scenes/main.tscn")
+
+
+func _on_play_other() -> void:
+	get_tree().change_scene_to_file("res://scenes/other_puzzle.tscn")
 
 
 func _say(line: String) -> void:
@@ -89,7 +141,7 @@ func _on_upgrade() -> void:
 		)
 		if not fact.is_empty():
 			_say(fact)
-		_refresh()
+		_bloom_to_stage()
 	elif GameState.dam_stage >= GameState.MAX_DAM:
 		_say("The lodge pond is as full as it gets for now.")
 	else:
@@ -184,6 +236,18 @@ func _on_tidy(item: Button) -> void:
 	_refresh()
 
 
+func _bloom_to_stage() -> void:
+	_bloom.visible = true
+	_bloom.modulate.a = 0.0
+	var tw := create_tween()
+	tw.tween_property(_bloom, "modulate:a", 0.82, 0.4)
+	tw.tween_callback(_refresh)
+	tw.tween_property(_bloom, "modulate:a", 0.0, BLOOM_SEC - 0.4)
+	tw.tween_callback(func() -> void:
+		_bloom.visible = false
+	)
+
+
 func _refresh() -> void:
 	_stars.text = "Sticks %d · Chops %d" % [GameState.stars, GameState.chops]
 	if GameState.last_idle > 0:
@@ -199,30 +263,54 @@ func _refresh() -> void:
 		_upgrade.disabled = true
 	else:
 		_upgrade.text = "Raise dam · %d sticks" % GameState.dam_cost()
-		_upgrade.disabled = not GameState.can_raise_dam()
+		_upgrade.disabled = false
 	if GameState.chops >= GameState.MAX_CHOPS:
 		_chops.text = "Chops max"
 		_chops.disabled = true
 	else:
 		_chops.text = "Rank Chops · %d sticks" % GameState.chops_cost()
-		_chops.disabled = not GameState.can_raise_chops()
-	var stage := GameState.dam_stage
-	var hush := float(GameState.patched_seep_count()) * 36.0
-	_water.offset_top = -220.0 - float(stage) * 110.0 - hush
-	_dam.size = Vector2(280.0 + float(stage) * 90.0, 120.0 + float(stage) * 36.0)
-	_dam.position = Vector2((size.x - _dam.size.x) * 0.5 if size.x > 1.0 else 360.0, 1120.0 - float(stage) * 18.0)
-	_lodge.modulate = Color(1, 1, 1, 1).lerp(Color(1.08, 1.05, 0.9), float(stage) / 3.0)
-	var plants := [_plant1, _plant2, _plant3]
-	for i in plants.size():
-		plants[i].visible = stage > i
+		_chops.disabled = false
+	var stage := clampi(GameState.dam_stage, 0, VALLEY_STAGES.size() - 1)
+	_sky.texture = VALLEY_STAGES[stage]
+	_place_dam(stage)
 	for item in [$Mess/Boot, $Mess/Weeds, $Mess/Can]:
 		item.visible = not GameState.is_tidied(item.name)
 	_log.visible = not GameState.log_cleared
-	_seep_a.visible = not GameState.is_seep_patched(_seep_a.name)
-	_seep_b.visible = not GameState.is_seep_patched(_seep_b.name)
+	_seep_a.visible = stage >= 1 and not GameState.is_seep_patched(_seep_a.name)
+	_seep_b.visible = stage >= 1 and not GameState.is_seep_patched(_seep_b.name)
 	_otter.visible = GameState.otter_unlocked()
 	_frog.visible = GameState.frog_unlocked()
 	if GameState.otter_unlocked() and GameState.can_claim_otter():
 		_otter.text = "Otter gift"
 	elif GameState.otter_unlocked():
 		_otter.text = "Otter (later)"
+
+
+func _place_dam(stage: int) -> void:
+	var built := stage >= 1
+	_dam.visible = built
+	_lodge.visible = built
+	if not built:
+		return
+	match stage:
+		1:
+			_dam.position = Vector2(290, 860)
+			_dam.size = Vector2(500, 300)
+			_lodge.position = Vector2(16, 1160)
+			_lodge.size = Vector2(280, 320)
+			_seep_a.position = Vector2(340, 920)
+			_seep_b.position = Vector2(560, 920)
+		2:
+			_dam.position = Vector2(170, 1180)
+			_dam.size = Vector2(740, 280)
+			_lodge.position = Vector2(8, 1240)
+			_lodge.size = Vector2(270, 280)
+			_seep_a.position = Vector2(280, 1220)
+			_seep_b.position = Vector2(620, 1220)
+		_:
+			_dam.position = Vector2(110, 1240)
+			_dam.size = Vector2(860, 260)
+			_lodge.position = Vector2(4, 1270)
+			_lodge.size = Vector2(270, 260)
+			_seep_a.position = Vector2(260, 1260)
+			_seep_b.position = Vector2(640, 1260)

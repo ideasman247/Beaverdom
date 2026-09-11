@@ -8,17 +8,18 @@ const GAP := 8.0
 const CLEAR_SEC := 0.16
 const FALL_SEC := 0.2
 const SWAP_SEC := 0.12
-const HUD_PAD := 40.0
+const HUD_PAD := 32.0
 const HUD_TOP := 36.0
-const HUD_BOTTOM := 100.0
-const STATUS_TOP := 108.0
-const STATUS_BOTTOM := 200.0
-const HINT_TOP := -160.0
-const HINT_BOTTOM := -64.0
-const HOME_TOP := -72.0
-const HOME_BOTTOM := -16.0
+const HUD_BOTTOM := 124.0
+const STATUS_TOP := 136.0
+const STATUS_BOTTOM := 228.0
+const HINT_TOP := -248.0
+const HINT_BOTTOM := -140.0
+const HOME_TOP := -124.0
+const HOME_BOTTOM := -24.0
 const MIN_INSET_TOP := 56.0
 const MIN_INSET_BOTTOM := 40.0
+const TRAY_INNER_RATIO := 0.74
 const BoardModel := preload("res://scripts/puzzle/board_model.gd")
 const MatchFinder := preload("res://scripts/puzzle/match_finder.gd")
 const MatchPlan := preload("res://scripts/puzzle/match_plan.gd")
@@ -51,6 +52,7 @@ var _oil_views: Dictionary = {}
 @onready var _hud_moves: Label = $Hud/Moves
 @onready var _hud_goal: Label = $Hud/Goal
 @onready var _grid_host: Control = $GridHost
+@onready var _tray: TextureRect = $Tray
 @onready var _oil_layer: Control = $OilLayer
 @onready var _overlay: ColorRect = $Overlay
 @onready var _overlay_banner: Label = $Overlay/Banner
@@ -65,6 +67,12 @@ func _ready() -> void:
 	_home.pressed.connect(_go_lodge)
 	_style_wood_button(_home)
 	_style_wood_button(_overlay_action)
+	_style_wood_chip(_hud_level)
+	_style_wood_chip(_hud_moves)
+	_style_wood_chip(_hud_goal)
+	_style_wood_chip(_status)
+	_style_wood_chip(_hint)
+	_style_wood_chip(_overlay_banner)
 	await get_tree().process_frame
 	_apply_safe_layout()
 	_start_level(GameState.puzzle_index)
@@ -72,16 +80,54 @@ func _ready() -> void:
 
 func _style_wood_button(btn: Button) -> void:
 	var box := StyleBoxFlat.new()
+	box.bg_color = Color(0.48, 0.33, 0.18, 0.98)
+	box.set_corner_radius_all(28)
+	box.border_color = Color(0.82, 0.64, 0.38)
+	box.set_border_width(SIDE_LEFT, 3)
+	box.set_border_width(SIDE_RIGHT, 3)
+	box.set_border_width(SIDE_TOP, 3)
+	box.set_border_width(SIDE_BOTTOM, 8)
+	box.content_margin_left = 28
+	box.content_margin_right = 28
+	box.content_margin_top = 14
+	box.content_margin_bottom = 16
+	box.shadow_color = Color(0.05, 0.03, 0.01, 0.55)
+	box.shadow_size = 10
+	box.shadow_offset = Vector2(0, 5)
+	var hover := box.duplicate() as StyleBoxFlat
+	hover.bg_color = Color(0.55, 0.38, 0.2, 1.0)
+	var pressed := box.duplicate() as StyleBoxFlat
+	pressed.bg_color = Color(0.32, 0.22, 0.12, 0.98)
+	pressed.set_border_width(SIDE_BOTTOM, 3)
+	pressed.shadow_size = 2
+	pressed.shadow_offset = Vector2(0, 1)
+	pressed.content_margin_top = 18
+	pressed.content_margin_bottom = 12
+	for key in ["normal", "focus"]:
+		btn.add_theme_stylebox_override(key, box)
+	btn.add_theme_stylebox_override("hover", hover)
+	btn.add_theme_stylebox_override("hover_pressed", pressed)
+	btn.add_theme_stylebox_override("pressed", pressed)
+	btn.add_theme_color_override("font_color", Color(1.0, 0.96, 0.86))
+	btn.add_theme_color_override("font_hover_color", Color(1.0, 0.98, 0.92))
+	btn.add_theme_color_override("font_pressed_color", Color(0.92, 0.84, 0.7))
+	btn.add_theme_color_override("font_outline_color", Color(0.18, 0.1, 0.05, 0.7))
+	btn.add_theme_constant_override("outline_size", 4)
+
+
+func _style_wood_chip(label: Label) -> void:
+	var box := StyleBoxFlat.new()
 	box.bg_color = Color(0.36, 0.26, 0.16, 0.94)
-	box.set_corner_radius_all(22)
+	box.set_corner_radius_all(18)
 	box.set_border_width_all(3)
 	box.border_color = Color(0.58, 0.44, 0.28)
-	var pressed := box.duplicate() as StyleBoxFlat
-	pressed.bg_color = Color(0.28, 0.2, 0.12, 0.96)
-	for key in ["normal", "hover", "focus"]:
-		btn.add_theme_stylebox_override(key, box)
-	btn.add_theme_stylebox_override("pressed", pressed)
-	btn.add_theme_color_override("font_color", Color(0.97, 0.93, 0.84))
+	box.content_margin_left = 14
+	box.content_margin_right = 14
+	box.content_margin_top = 8
+	box.content_margin_bottom = 8
+	label.add_theme_stylebox_override("normal", box)
+	label.add_theme_color_override("font_color", Color(0.97, 0.93, 0.84))
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 
 
 func _notification(what: int) -> void:
@@ -120,6 +166,20 @@ func _apply_safe_layout() -> void:
 	_hint.offset_bottom = HINT_BOTTOM - inset.y
 	_home.offset_top = HOME_TOP - inset.y
 	_home.offset_bottom = HOME_BOTTOM - inset.y
+	_fit_tray()
+
+
+func _fit_tray() -> void:
+	if _tray == null or _grid_host == null:
+		return
+	var grid := _grid_host.size.x
+	if grid <= 1.0:
+		return
+	var half := (grid / TRAY_INNER_RATIO) * 0.5
+	_tray.offset_left = -half
+	_tray.offset_top = -half
+	_tray.offset_right = half
+	_tray.offset_bottom = half
 
 
 func _go_lodge() -> void:
@@ -162,7 +222,7 @@ func _current_level() -> Dictionary:
 
 func _refresh_hud() -> void:
 	var spec := _current_level()
-	_hud_level.text = "Lv %d / %d" % [int(spec[&"id"]), _levels.size()]
+	_hud_level.text = "Lvl %d/%d" % [int(spec[&"id"]), _levels.size()]
 	_hud_moves.text = "Moves %d" % _moves_left
 	_hud_goal.text = _goal_label()
 

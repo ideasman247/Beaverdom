@@ -1,7 +1,7 @@
 [gd_scene load_steps=14 format=3 uid="uid://bvrvalleyhub"]
 
 [ext_resource type="Script" path="res://scripts/valley/valley_map.gd" id="1_valley"]
-[ext_resource type="Texture2D" path="res://assets/art/valley_bg.png" id="2_bg"]
+[ext_resource type="Texture2D" path="res://assets/art/valley_stage0.png" id="2_bg"]
 [ext_resource type="Texture2D" path="res://assets/art/lodge.png" id="3_lodge"]
 [ext_resource type="Texture2D" path="res://assets/art/dam.png" id="4_dam"]
 [ext_resource type="Texture2D" path="res://assets/art/reeds.png" id="5_reeds"]
@@ -49,6 +49,7 @@ mouse_filter = 2
 color = Color(0.28, 0.36, 0.22, 1)
 
 [node name="Water" type="ColorRect" parent="."]
+visible = false
 layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0
@@ -71,22 +72,26 @@ mouse_filter = 2
 color = Color(0.22, 0.28, 0.16, 1)
 
 [node name="Dam" type="TextureRect" parent="."]
+visible = false
+z_index = 6
 layout_mode = 0
-offset_left = 360.0
-offset_top = 1120.0
-offset_right = 720.0
-offset_bottom = 1280.0
+offset_left = 290.0
+offset_top = 860.0
+offset_right = 790.0
+offset_bottom = 1160.0
 mouse_filter = 2
 texture = ExtResource("4_dam")
 expand_mode = 1
 stretch_mode = 5
 
 [node name="Lodge" type="TextureRect" parent="."]
+visible = false
+z_index = 7
 layout_mode = 0
-offset_left = 40.0
-offset_top = 980.0
-offset_right = 360.0
-offset_bottom = 1300.0
+offset_left = 8.0
+offset_top = 1180.0
+offset_right = 300.0
+offset_bottom = 1500.0
 mouse_filter = 2
 texture = ExtResource("3_lodge")
 expand_mode = 1
@@ -224,11 +229,13 @@ vertical_icon_alignment = 0
 expand_icon = true
 
 [node name="SeepA" type="Button" parent="."]
+visible = false
+z_index = 4
 layout_mode = 0
-offset_left = 380.0
+offset_left = 280.0
 offset_top = 1220.0
-offset_right = 560.0
-offset_bottom = 1380.0
+offset_right = 460.0
+offset_bottom = 1400.0
 theme_override_colors/font_color = Color(0.12, 0.16, 0.12, 1)
 theme_override_font_sizes/font_size = 22
 theme_override_styles/normal = SubResource("empty")
@@ -246,11 +253,13 @@ vertical_icon_alignment = 0
 expand_icon = true
 
 [node name="SeepB" type="Button" parent="."]
+visible = false
+z_index = 4
 layout_mode = 0
-offset_left = 580.0
-offset_top = 1208.0
-offset_right = 760.0
-offset_bottom = 1368.0
+offset_left = 620.0
+offset_top = 1220.0
+offset_right = 800.0
+offset_bottom = 1400.0
 theme_override_colors/font_color = Color(0.12, 0.16, 0.12, 1)
 theme_override_font_sizes/font_size = 22
 theme_override_styles/normal = SubResource("empty")
@@ -269,11 +278,12 @@ expand_icon = true
 
 [node name="Otter" type="Button" parent="."]
 visible = false
+z_index = 4
 layout_mode = 0
-offset_left = 40.0
-offset_top = 820.0
-offset_right = 280.0
-offset_bottom = 1060.0
+offset_left = 16.0
+offset_top = 980.0
+offset_right = 250.0
+offset_bottom = 1220.0
 theme_override_colors/font_color = Color(0.12, 0.16, 0.12, 1)
 theme_override_font_sizes/font_size = 22
 theme_override_styles/normal = SubResource("empty")
@@ -292,11 +302,12 @@ expand_icon = true
 
 [node name="Frog" type="Button" parent="."]
 visible = false
+z_index = 4
 layout_mode = 0
 offset_left = 800.0
-offset_top = 1140.0
+offset_top = 1260.0
 offset_right = 1040.0
-offset_bottom = 1360.0
+offset_bottom = 1490.0
 theme_override_colors/font_color = Color(0.12, 0.16, 0.12, 1)
 theme_override_font_sizes/font_size = 22
 theme_override_styles/normal = SubResource("empty")
@@ -313,7 +324,21 @@ icon_alignment = 1
 vertical_icon_alignment = 0
 expand_icon = true
 
+[node name="Bloom" type="ColorRect" parent="."]
+visible = false
+z_index = 20
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 0.96, 0.78, 1)
+modulate = Color(1, 1, 1, 0)
+
 [node name="Hud" type="HBoxContainer" parent="."]
+z_index = 30
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
@@ -330,13 +355,13 @@ theme_override_colors/font_color = Color(0.12, 0.16, 0.14, 1)
 theme_override_font_sizes/font_size = 32
 text = "Sticks 0"
 
-[node name="Title" type="Label" parent="Hud"]
+[node name="Title" type="MenuButton" parent="Hud"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.12, 0.16, 0.14, 1)
 theme_override_font_sizes/font_size = 32
 text = "Beaverdom"
-horizontal_alignment = 2
+flat = true
+alignment = 2
 
 [node name="Note" type="Label" parent="."]
 layout_mode = 1
@@ -378,7 +403,7 @@ offset_bottom = -200.0
 theme_override_font_sizes/font_size = 28
 text = "Raise dam · 8 sticks"
 
-[node name="Play" type="Button" parent="."]
+[node name="PlayRow" type="HBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0
@@ -388,5 +413,16 @@ offset_left = 48.0
 offset_top = -180.0
 offset_right = -48.0
 offset_bottom = -48.0
-theme_override_font_sizes/font_size = 34
+theme_override_constants/separation = 16
+
+[node name="Play" type="Button" parent="PlayRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 28
 text = "Play puzzle"
+
+[node name="PlayOther" type="Button" parent="PlayRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 28
+text = "Play other puzzle"

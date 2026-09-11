@@ -125,6 +125,14 @@ func award_win(moves_left: int) -> int:
 	return gain
 
 
+func award_snood_win(rescued: int, bits: int) -> int:
+	var gain := 4 + bits + int(rescued / 2)
+	stars += gain
+	last_payout = gain
+	save_game()
+	return gain
+
+
 func dam_cost() -> int:
 	if dam_stage >= MAX_DAM:
 		return 0
@@ -210,11 +218,11 @@ func patch_seep(id: String) -> bool:
 
 
 func otter_unlocked() -> bool:
-	return dam_stage >= 1
+	return dam_stage >= 3
 
 
 func frog_unlocked() -> bool:
-	return dam_stage >= 1 or tidied.size() > 0
+	return dam_stage >= 2
 
 
 func _today() -> int:
@@ -240,3 +248,29 @@ func first_hear(id: String, line: String) -> String:
 	heard[id] = true
 	save_game()
 	return line
+
+
+func debug_reset_sticks() -> void:
+	stars = 0
+	last_payout = 0
+	last_idle = 0
+	save_game()
+	progress_changed.emit()
+
+
+func debug_reset_chops() -> void:
+	chops = 1
+	save_game()
+	progress_changed.emit()
+
+
+func debug_reset_dam() -> void:
+	dam_stage = 0
+	save_game()
+	progress_changed.emit()
+
+
+func debug_reset_puzzles() -> void:
+	puzzle_index = 0
+	save_game()
+	progress_changed.emit()
