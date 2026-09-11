@@ -13,6 +13,8 @@ const ICON_GAP := 20.0
 const DRIP_HANG := 0.22
 const MIN_INSET_TOP := 56.0
 const MIN_INSET_BOTTOM := 40.0
+const LOB_GRAVITY := 2800.0
+const LOB_MAX_SEC := 1.8
 
 var _model := Model.new()
 var _views: Dictionary = {}
@@ -89,12 +91,13 @@ func _on_resized() -> void:
 
 func _layout_board() -> void:
 	var w := size.x if size.x > 1.0 else 1080.0
-	_cell = minf(104.0, (w - 48.0) / 8.5)
+	# Even rows are 8 icons; fill the screen so banks happen at the visible edges.
+	_cell = w / 8.0
 	_row_h = _cell * 0.86
-	_origin.x = (w - (_cell * 8.0 + _cell * 0.5)) * 0.5 + _cell * 0.5
+	_origin.x = 0.0
 	_sync_sludge()
-	_shot.size = Vector2(_cell * 1.4, _cell * 1.4)
-	_queue.size = Vector2(_cell * 1.1, _cell * 1.1)
+	_shot.size = Vector2(_cell, _cell)
+	_queue.size = Vector2(_cell * 0.85, _cell * 0.85)
 
 
 func _notification(what: int) -> void:
@@ -236,8 +239,9 @@ func _process(delta: float) -> void:
 		_place_chamber()
 		return
 	_shot_pos += _shot_vel * delta
-	var left := _origin.x - _cell * 0.15
-	var right := _origin.x + _cell * 7.6
+	var half := _cell * 0.5
+	var left := half
+	var right := (size.x if size.x > 1.0 else 1080.0) - half
 	var bounced := false
 	if _shot_pos.x < left:
 		_shot_pos.x = left
@@ -355,6 +359,7 @@ func _resolve_match(cell: Vector2i, icon_type: int) -> void:
 			_reward_match(_model.get_cell(g.x, g.y))
 			_model.set_cell(g.x, g.y, Model.EMPTY)
 		Sfx.tap()
+		_rebuild_views()
 	await _drop_severed()
 
 
@@ -365,16 +370,73 @@ func _resolve_row(row: int) -> void:
 			_reward_match(t)
 	_model.clear_row(row)
 	Sfx.tap()
+	_rebuild_views()
 	await _drop_severed()
 
 
 func _drop_severed() -> void:
 	var fall := _model.severed_cells()
+	if fall.is_empty():
+		return
+	var payloads: Array[Dictionary] = []
 	for cell in fall:
-		_reward_drop(_model.get_cell(cell.x, cell.y))
+		var icon_type := _model.get_cell(cell.x, cell.y)
+		payloads.append({
+			&"type": icon_type,
+			&"pos": _hex_pos(cell.x, cell.y),
+		})
+		_reward_drop(icon_type)
 		_model.set_cell(cell.x, cell.y, Model.EMPTY)
-	if not fall.is_empty():
-		await get_tree().create_timer(0.12).timeout
+	_rebuild_views()
+	await _lob_icons(payloads)
+
+
+func _lob_icons(payloads: Array[Dictionary]) -> void:
+	var lobs: Array[Dictionary] = []
+	var mid := size.x * 0.5 if size.x > 1.0 else 540.0
+	for piece in payloads:
+		var node := TextureRect.new()
+		node.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		node.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		node.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		node.size = Vector2(_cell, _cell)
+		node.position = piece[&"pos"]
+		node.pivot_offset = node.size * 0.5
+		node.z_index = 7
+		node.texture = Art.texture_for(int(piece[&"type"]))
+		add_child(node)
+		var away := (node.position.x + _cell * 0.5) - mid
+		lobs.append({
+			&"node": node,
+			&"vel": Vector2(away * 1.4 + randf_range(-160.0, 160.0), randf_range(-520.0, -180.0)),
+			&"spin": randf_range(-9.0, 9.0),
+		})
+	Sfx.bounce()
+	var elapsed := 0.0
+	while elapsed < LOB_MAX_SEC and not lobs.is_empty():
+		var dt := get_process_delta_time()
+		await get_tree().process_frame
+		elapsed += dt
+		var next: Array[Dictionary] = []
+		var floor_y := (size.y if size.y > 1.0 else 1920.0) + _cell
+		for lob in lobs:
+			var node: TextureRect = lob[&"node"]
+			if not is_instance_valid(node):
+				continue
+			var vel: Vector2 = lob[&"vel"]
+			vel.y += LOB_GRAVITY * dt
+			lob[&"vel"] = vel
+			node.position += vel * dt
+			node.rotation += float(lob[&"spin"]) * dt
+			if node.position.y < floor_y and node.position.x > -_cell * 2.0 and node.position.x < size.x + _cell:
+				next.append(lob)
+			else:
+				node.queue_free()
+		lobs = next
+	for lob in lobs:
+		var node: TextureRect = lob[&"node"]
+		if is_instance_valid(node):
+			node.queue_free()
 
 
 func _reward_match(icon_type: int) -> void:
